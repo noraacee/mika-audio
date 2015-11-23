@@ -9,19 +9,36 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class P2PManager {
+    private static final String COMMAND = "_CMD";
+    private static final String MESSAGE = "_MSG";
     private static final String SERVICE_TYPE = "_http._tcp.";
 
-    private ServerSocket socket;
+    private NsdManager nsdManager;
+
+    private ServerSocket cmdSocket;
+    private ServerSocket msgSocket;
 
     public P2PManager(Context context) throws IOException {
-        socket = new ServerSocket(0);
+        nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
+    }
 
-        NsdServiceInfo serviceInfo = new NsdServiceInfo();
-        serviceInfo.setServiceName(SetupManager.getDeviceName());
-        serviceInfo.setServiceType(SERVICE_TYPE);
-        serviceInfo.setPort(socket.getLocalPort());
+    public ServerSocket getCmdSocket() {
+        return cmdSocket;
+    }
 
-        NsdManager.RegistrationListener registrationListener = new NsdManager.RegistrationListener() {
+    public ServerSocket getMsgSocket() {
+        return msgSocket;
+    }
+
+    public void registerCmdService() throws IOException {
+        cmdSocket = new ServerSocket(0);
+
+        NsdServiceInfo cmdServiceInfo = new NsdServiceInfo();
+        cmdServiceInfo.setServiceName(SetupManager.getDeviceName() + COMMAND);
+        cmdServiceInfo.setServiceType(SERVICE_TYPE);
+        cmdServiceInfo.setPort(cmdSocket.getLocalPort());
+
+        nsdManager.registerService(cmdServiceInfo, NsdManager.PROTOCOL_DNS_SD, new NsdManager.RegistrationListener() {
             @Override
             public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 Log.e("registration failed", Integer.toString(errorCode));
@@ -42,13 +59,38 @@ public class P2PManager {
             public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
                 Log.d("status", "service unregistered");
             }
-        };
-
-        NsdManager nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
-        nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener);
+        });
     }
 
-    public ServerSocket getSocket() {
-        return socket;
+    public void registerMsgService() throws IOException {
+        msgSocket = new ServerSocket(0);
+
+        NsdServiceInfo msgServiceInfo = new NsdServiceInfo();
+        msgServiceInfo.setServiceName(SetupManager.getDeviceName() + MESSAGE);
+        msgServiceInfo.setServiceType(SERVICE_TYPE);
+        msgServiceInfo.setPort(msgSocket.getLocalPort());
+
+        nsdManager.registerService(msgServiceInfo, NsdManager.PROTOCOL_DNS_SD, new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                Log.e("registration failed", Integer.toString(errorCode));
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                Log.e("unregistration failed", Integer.toString(errorCode));
+            }
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                Log.d("service name", serviceInfo.getServiceName());
+                Log.d("status", "service registered");
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+                Log.d("status", "service unregistered");
+            }
+        });
     }
 }
