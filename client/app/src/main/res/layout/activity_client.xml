@@ -9,6 +9,26 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <Button
+        android:id="@+id/click"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="click" />
+    <Button
+        android:id="@+id/back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="back" />
+    <Button
+        android:id="@+id/home"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="home" />
+    <Button
+        android:id="@+id/apps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="app" />
+    <Button
         android:id="@+id/up"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -28,11 +48,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="right" />
-    <Button
-        android:id="@+id/click"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="click" />
     <EditText
         android:id="@+id/message_to_send"
         android:layout_width="match_parent"

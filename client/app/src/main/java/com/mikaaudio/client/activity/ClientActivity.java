@@ -9,7 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.mikaaudio.client.R;
-import com.mikaaudio.client.util.MessageManager;
+import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
 import com.mikaaudio.client.util.StatusManager;
 
@@ -17,8 +17,11 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class ClientActivity extends Activity {
+    private Button apps;
+    private Button back;
     private Button click;
     private Button down;
+    private Button home;
     private Button left;
     private Button right;
     private Button send;
@@ -26,7 +29,7 @@ public class ClientActivity extends Activity {
     private EditText sendView;
 
     private P2PManager pManager;
-    private MessageManager mManager;
+    private CommunicationManager cManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +45,7 @@ public class ClientActivity extends Activity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mManager.write(sendView.getText().toString());
+                cManager.write(sendView.getText().toString());
             }
         });
 
@@ -51,7 +54,34 @@ public class ClientActivity extends Activity {
         click.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mManager.write(MessageManager.CLICK);
+                cManager.write(CommunicationManager.KEY_CLICK);
+            }
+        });
+
+        back = (Button) findViewById(R.id.back);
+        back.setEnabled(false);
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cManager.write(CommunicationManager.KEY_BACK);
+            }
+        });
+
+        home = (Button) findViewById(R.id.home);
+        home.setEnabled(false);
+        home.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cManager.write(CommunicationManager.KEY_HOME);
+            }
+        });
+
+        apps = (Button) findViewById(R.id.apps);
+        apps.setEnabled(false);
+        apps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cManager.write(CommunicationManager.KEY_APPS);
             }
         });
 
@@ -60,7 +90,7 @@ public class ClientActivity extends Activity {
         up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mManager.write(MessageManager.UP);
+                cManager.write(CommunicationManager.KEY_UP);
             }
         });
 
@@ -69,7 +99,7 @@ public class ClientActivity extends Activity {
         down.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mManager.write(MessageManager.DOWN);
+                cManager.write(CommunicationManager.KEY_DOWN);
             }
         });
 
@@ -78,7 +108,7 @@ public class ClientActivity extends Activity {
         left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mManager.write(MessageManager.LEFT);
+                cManager.write(CommunicationManager.KEY_LEFT);
             }
         });
 
@@ -87,12 +117,12 @@ public class ClientActivity extends Activity {
         right.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mManager.write(MessageManager.RIGHT);
+                cManager.write(CommunicationManager.KEY_RIGHT);
             }
         });
 
         pManager = new P2PManager(this);
-        mManager = new MessageManager();
+        cManager = new CommunicationManager();
 
         new ConnectServerTask().execute();
     }
@@ -107,9 +137,9 @@ public class ClientActivity extends Activity {
         super.onResume();
     }
 
-    public void setCmdSocket(Socket socket) {
+    public void setKeySocket(Socket socket) {
         try {
-            mManager.setCommandSocket(socket);
+            cManager.setKeySocket(socket);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -117,7 +147,7 @@ public class ClientActivity extends Activity {
 
     public void setMsgSocket(Socket socket) {
         try {
-            mManager.setMessageSocket(socket);
+            cManager.setMessageSocket(socket);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -135,6 +165,9 @@ public class ClientActivity extends Activity {
         protected void onPostExecute(Void nothing) {
             send.setEnabled(true);
             click.setEnabled(true);
+            back.setEnabled(true);
+            home.setEnabled(true);
+            apps.setEnabled(true);
             up.setEnabled(true);
             down.setEnabled(true);
             left.setEnabled(true);

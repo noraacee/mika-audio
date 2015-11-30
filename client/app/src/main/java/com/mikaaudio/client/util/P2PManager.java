@@ -12,18 +12,18 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class P2PManager {
-    private static final String COMMAND = "_CMD";
+    private static final String KEY = "_KEY";
     private static final String MESSAGE = "_MSG";
     private static final String SERVICE_TYPE = "_http._tcp.";
 
-    private boolean cmdConnected;
+    private boolean keyConnected;
     private boolean msgConnected;
 
     private NsdManager nsdManager;
     private NsdManager.DiscoveryListener discoveryListener;
 
     public P2PManager(final ClientActivity activity) {
-        cmdConnected = false;
+        keyConnected = false;
         msgConnected = false;
 
         nsdManager = (NsdManager) activity.getSystemService(Context.NSD_SERVICE);
@@ -56,7 +56,7 @@ public class P2PManager {
                 if (!serviceInfo.getServiceType().equals(SERVICE_TYPE)) {
                     Log.e("service type", serviceInfo.getServiceType());
                 } else if (serviceInfo.getServiceName().contains(SetupManager.getDeviceName())) {
-                    if (!cmdConnected && serviceInfo.getServiceName().contains(COMMAND)) {
+                    if (!keyConnected && serviceInfo.getServiceName().contains(KEY)) {
                         nsdManager.resolveService(serviceInfo, new NsdManager.ResolveListener() {
                             @Override
                             public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
@@ -69,10 +69,10 @@ public class P2PManager {
                                     if (msgConnected)
                                         nsdManager.stopServiceDiscovery(discoveryListener);
 
-                                    activity.setCmdSocket(new Socket(serviceInfo.getHost(), serviceInfo.getPort()));
-                                    Log.d("status", "connected command socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
+                                    activity.setKeySocket(new Socket(serviceInfo.getHost(), serviceInfo.getPort()));
+                                    Log.d("status", "connected key socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
 
-                                    cmdConnected = true;
+                                    keyConnected = true;
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -88,7 +88,7 @@ public class P2PManager {
                             @Override
                             public void onServiceResolved(NsdServiceInfo serviceInfo) {
                                 try {
-                                    if (cmdConnected)
+                                    if (keyConnected)
                                         nsdManager.stopServiceDiscovery(discoveryListener);
 
                                     activity.setMsgSocket(new Socket(serviceInfo.getHost(), serviceInfo.getPort()));
