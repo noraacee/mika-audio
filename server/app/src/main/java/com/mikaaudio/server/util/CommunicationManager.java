@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -89,9 +88,11 @@ public class CommunicationManager {
 
         @Override
         protected void onPostExecute(Integer key) {
-            if (key != null) {
+            if (key != -1) {
                 parse(key);
                 listenKey();
+            } else {
+                
             }
         }
     }

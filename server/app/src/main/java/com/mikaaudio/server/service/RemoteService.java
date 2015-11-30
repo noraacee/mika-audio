@@ -11,12 +11,10 @@ import com.mikaaudio.server.util.CommunicationManager;
 import com.mikaaudio.server.util.P2PManager;
 import com.mikaaudio.server.util.SuperUserManager;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class RemoteService extends Service {
-    private DataOutputStream shell;
-    private Process su;
+    private boolean running;
 
     private CommunicationManager cManager;
     private P2PManager pManager;
@@ -24,6 +22,8 @@ public class RemoteService extends Service {
 
     @Override
     public void onCreate() {
+        running = false;
+
         try {
             suManager = new SuperUserManager();
             cManager = new CommunicationManager(suManager);
@@ -35,6 +35,12 @@ public class RemoteService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (running)
+            return START_REDELIVER_INTENT;
+
+        running = true;
+
+        new KeySocketAcceptTask().execute();
 
         return START_REDELIVER_INTENT;
     }
@@ -72,6 +78,7 @@ public class RemoteService extends Service {
             if (success) {
                 new MsgSocketAcceptTask().execute();
             } else {
+                running = false;
                 Log.e("status", "Failed to create connection with key socket");
             }
         }
@@ -95,9 +102,11 @@ public class RemoteService extends Service {
         @Override
         protected void onPostExecute(Boolean success) {
             if (success) {
+                cManager.setMode(CommunicationManager.Mode.RUNNING);
                 cManager.listenKey();
                 cManager.listenMsg();
             } else {
+                running = false;
                 Log.e("status", "Failed to create connection with message socket");
             }
         }

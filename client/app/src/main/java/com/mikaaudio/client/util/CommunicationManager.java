@@ -26,9 +26,9 @@ public class CommunicationManager {
         msgOut = new PrintWriter(socket.getOutputStream(), true);
     }
 
-    public void write(int cmd) {
+    public void write(int key) {
         try {
-            key.write(cmd);
+            this.key.write(key);
         } catch (IOException e) {
             e.printStackTrace();
         }
