@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommunicationManager {
+    private static final int SOCKET_TIMEOUT = 60000;
     private SuperUserManager suManager;
 
     private List<Socket> sockets;
@@ -24,18 +25,19 @@ public class CommunicationManager {
         readSocketTasks = new ArrayList<>();
     }
 
-    public void addKeySocket(Socket socket) throws IOException {
+    public void addSocket(Socket socket) throws IOException {
         Log.d("socket", "socket created at port " + socket.getLocalPort());
 
-        socket.setSoTimeout(10000);
+        socket.setSoTimeout(SOCKET_TIMEOUT);
         sockets.add(socket);
 
         ReadSocketTask readSocketTask = new ReadSocketTask(socket);
-        readSocketTask.execute();
+        readSocketTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         readSocketTasks.add(readSocketTask);
     }
 
     public void onDestroy() {
+        Log.d("status", "On destroy");
         for (ReadSocketTask t : readSocketTasks)
             t.cancel(true);
 
@@ -69,16 +71,15 @@ public class CommunicationManager {
             try {
                 InputStream in = socket.getInputStream();
                 OutputStream out = socket.getOutputStream();
-                int key;
+                int cmd;
                 while(true) {
                     try {
-                        key = in.read();
-                        if (key != -1)
-                            parse(key);
+                        cmd = in.read();
+                        if (cmd != -1)
+                            parse(cmd);
                         else
                             break;
                     } catch (SocketTimeoutException ste) {
-                        Log.d("status", "Socket timeout");
                         try {
                             out.write(0);
                         } catch (IOException ioe) {
@@ -95,7 +96,7 @@ public class CommunicationManager {
 
         @Override
         protected void onPostExecute(Void nothing) {
-            Log.d("status", "Socket disconnected");
+            Log.d("status", "Socket at port " + socket.getLocalPort() + "is disconnected");
             sockets.remove(socket);
             readSocketTasks.remove(this);
 

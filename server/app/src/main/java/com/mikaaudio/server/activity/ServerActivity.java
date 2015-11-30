@@ -3,6 +3,7 @@ package com.mikaaudio.server.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 
 import com.mikaaudio.server.R;
@@ -17,6 +18,13 @@ public class ServerActivity extends Activity{
         setContentView(R.layout.activity_server);
 
         StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
+
+        findViewById(R.id.end).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopService(new Intent(ServerActivity.this, RemoteService.class));
+            }
+        });
 
         startService(new Intent(this, RemoteService.class));
     }

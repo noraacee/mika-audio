@@ -25,8 +25,7 @@
 
         <service
             android:name=".service.RemoteService"
-            android:exported="false"
-            android:process=":Service"/>
+            android:exported="false"/>
     </application>
 
 </manifest>
