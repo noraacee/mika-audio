@@ -5,7 +5,7 @@ import java.io.IOException;
 
 public class SuperUserManager {
     private static final String COMMAND_EXIT = "exit\n";
-    private static final String COMMAND_INPUT_KEYEVENT = "input keyevent ";
+    private static final String COMMAND_INPUT_KEY_EVENT = "input keyevent ";
     private static final String SUPER_USER = "su";
 
     private DataOutputStream shell;
@@ -16,8 +16,8 @@ public class SuperUserManager {
         shell = new DataOutputStream(su.getOutputStream());
     }
 
-    public void inputKeyevent(int key) throws IOException {
-        runCommand(COMMAND_INPUT_KEYEVENT + key + "\n");
+    public void inputKeyEvent(int key) throws IOException {
+        runCommand(COMMAND_INPUT_KEY_EVENT + key + "\n");
     }
 
     public void onDestroy() {
@@ -30,7 +30,7 @@ public class SuperUserManager {
         }
     }
 
-    private void runCommand(String cmd) throws IOException {
+    public void runCommand(String cmd) throws IOException {
         shell.writeBytes(cmd);
         shell.flush();
     }

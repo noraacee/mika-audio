@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.mikaaudio.client.R;
+import com.mikaaudio.client.interf.OnDisconnectListener;
 import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
 import com.mikaaudio.client.util.StatusManager;
@@ -28,8 +29,8 @@ public class ClientActivity extends Activity {
     private Button up;
     private EditText sendView;
 
-    private P2PManager pManager;
-    private CommunicationManager cManager;
+    private P2PManager p2pManager;
+    private CommunicationManager commManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +46,7 @@ public class ClientActivity extends Activity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(sendView.getText().toString());
+                //commManager.write(sendView.getText().toString());
             }
         });
 
@@ -54,7 +55,7 @@ public class ClientActivity extends Activity {
         click.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_CLICK);
+                commManager.write(CommunicationManager.KEY_CLICK);
             }
         });
 
@@ -63,7 +64,7 @@ public class ClientActivity extends Activity {
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_BACK);
+                commManager.write(CommunicationManager.KEY_BACK);
             }
         });
 
@@ -72,7 +73,7 @@ public class ClientActivity extends Activity {
         home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_HOME);
+                commManager.write(CommunicationManager.KEY_HOME);
             }
         });
 
@@ -81,7 +82,7 @@ public class ClientActivity extends Activity {
         apps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_APPS);
+                commManager.write(CommunicationManager.KEY_APPS);
             }
         });
 
@@ -90,7 +91,7 @@ public class ClientActivity extends Activity {
         up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_UP);
+                commManager.write(CommunicationManager.KEY_UP);
             }
         });
 
@@ -99,7 +100,7 @@ public class ClientActivity extends Activity {
         down.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_DOWN);
+                commManager.write(CommunicationManager.KEY_DOWN);
             }
         });
 
@@ -108,7 +109,7 @@ public class ClientActivity extends Activity {
         left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_LEFT);
+                commManager.write(CommunicationManager.KEY_LEFT);
             }
         });
 
@@ -117,12 +118,17 @@ public class ClientActivity extends Activity {
         right.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cManager.write(CommunicationManager.KEY_RIGHT);
+                commManager.write(CommunicationManager.KEY_RIGHT);
             }
         });
 
-        pManager = new P2PManager(this);
-        cManager = new CommunicationManager();
+        commManager = new CommunicationManager(new OnDisconnectListener() {
+            @Override
+            public void onDisconnect() {
+                new ConnectServerTask().execute();
+            }
+        });
+        p2pManager = new P2PManager(this, commManager);
 
         new ConnectServerTask().execute();
     }
@@ -130,6 +136,7 @@ public class ClientActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        p2pManager.onDestroy();
     }
 
     @Override
@@ -137,27 +144,11 @@ public class ClientActivity extends Activity {
         super.onResume();
     }
 
-    public void setKeySocket(Socket socket) {
-        try {
-            cManager.setKeySocket(socket);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void setMsgSocket(Socket socket) {
-        try {
-            cManager.setMessageSocket(socket);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private class ConnectServerTask extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... nothing) {
-            pManager.connect();
+            p2pManager.connect();
             return null;
         }
 
