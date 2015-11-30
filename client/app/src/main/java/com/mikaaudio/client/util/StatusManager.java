@@ -3,21 +3,34 @@ package com.mikaaudio.client.util;
 import android.widget.TextView;
 
 public class StatusManager {
-    private static TextView statusView;
+    private static StatusManager instance;
 
-    public static void setStatusView(TextView statusView) {
-        StatusManager.statusView = statusView;
+    static {
+        instance = new StatusManager();
     }
 
-    public static void setStatus(String status) {
+    private TextView statusView;
+
+    private StatusManager() {
+    }
+
+    public static StatusManager getInstance() {
+        return instance;
+    }
+
+    public void setStatusView(TextView statusView) {
+        this.statusView = statusView;
+    }
+
+    public void setStatus(String status) {
         if (statusView != null)
-            StatusManager.statusView.setText(status);
+            statusView.setText(status);
     }
 
-    public static void appendStatus(String status) {
+    public void appendStatus(String status) {
         if (statusView != null) {
-            String currStats = StatusManager.statusView.getText().toString();
-            StatusManager.statusView.setText(currStats + "\n" + status);
+            String currStats = statusView.getText().toString();
+            statusView.setText(currStats + "\n" + status);
         }
     }
 }

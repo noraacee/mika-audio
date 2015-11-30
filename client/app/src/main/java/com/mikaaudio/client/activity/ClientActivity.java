@@ -36,7 +36,7 @@ public class ClientActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
 
-        StatusManager.setStatusView((TextView) findViewById(R.id.status));
+        StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
         sendView = (EditText) findViewById(R.id.message_to_send);
         sendView.setEnabled(false);
 

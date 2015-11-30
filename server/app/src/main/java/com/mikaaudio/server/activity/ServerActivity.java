@@ -7,14 +7,14 @@ import android.widget.TextView;
 
 import com.mikaaudio.server.R;
 
-import com.mikaaudio.server.util.MessageManager;
+import com.mikaaudio.server.util.CommunicationManager;
 import com.mikaaudio.server.util.P2PManager;
 import com.mikaaudio.server.util.StatusManager;
 
 import java.io.IOException;
 
 public class ServerActivity extends Activity{
-    private MessageManager mManager;
+    private CommunicationManager mManager;
     private P2PManager pManager;
 
     @Override
@@ -22,10 +22,10 @@ public class ServerActivity extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
 
-        StatusManager.setStatusView((TextView) findViewById(R.id.status));
+        StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
         TextView receiveView = (TextView) findViewById(R.id.message_received);
 
-        mManager = new MessageManager(receiveView);
+        mManager = new CommunicationManager(receiveView);
 
         try {
             pManager = new P2PManager(ServerActivity.this);
@@ -51,7 +51,7 @@ public class ServerActivity extends Activity{
         protected Boolean doInBackground(Void... nothing) {
             try {
                 pManager.registerCmdService();
-                mManager.setCommandSocket(pManager.getCmdSocket().accept());
+                mManager.setKeySocket(pManager.getCmdSocket().accept());
 
                 return true;
             } catch (IOException e) {
@@ -89,7 +89,7 @@ public class ServerActivity extends Activity{
         @Override
         protected void onPostExecute(Boolean success) {
             if (success) {
-                mManager.listenCmd();
+                mManager.listenKey();
                 mManager.listenMsg();
             } else {
                 StatusManager.setStatus("Failed to create connection with socket");

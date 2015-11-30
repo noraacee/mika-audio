@@ -116,4 +116,8 @@ public class P2PManager {
     public void connect() {
         nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
     }
+
+    public void onDestroy() {
+
+    }
 }
