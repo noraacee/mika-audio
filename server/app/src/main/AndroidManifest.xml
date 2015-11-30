@@ -25,7 +25,8 @@
 
         <service
             android:name=".service.RemoteService"
-            android:exported="false"/>
+            android:exported="false"
+            android:process=":com.mikaaudio.server.service"/>
     </application>
 
 </manifest>

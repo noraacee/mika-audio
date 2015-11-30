@@ -4,6 +4,7 @@ import com.mikaaudio.client.interf.OnDisconnectListener;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 public class CommunicationManager {
@@ -18,19 +19,32 @@ public class CommunicationManager {
 
     private OnDisconnectListener onDisconnectListener;
 
-    private OutputStream key;
+    private OutputStream outByte;
+    private PrintWriter outString;
+    private Socket socket;
 
     public CommunicationManager(OnDisconnectListener dListener) {
         this.onDisconnectListener = dListener;
     }
 
-    public void setSocket(Socket socket) throws IOException {
-        key = socket.getOutputStream();
+    public void onDestroy() {
+        try {
+            if (socket != null)
+                socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void write(int key) {
+    public void setSocket(Socket socket) throws IOException {
+        this.socket = socket;
+        outByte = socket.getOutputStream();
+        outString = new PrintWriter(outByte);
+    }
+
+    public void write(int cmd) {
         try {
-            this.key.write(key);
+            outByte.write(cmd);
         } catch (IOException e) {
             onDisconnect();
         }

@@ -1,6 +1,6 @@
-package com.mikaaudio.server.util;
+package com.mikaaudio.client.util;
 
-public class SetupManager {
+public class AppManager {
     private static final String DEVICE_NAME = "MIKA AUDIO";
 
     public static String getDeviceName() {

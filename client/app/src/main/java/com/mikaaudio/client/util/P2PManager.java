@@ -13,13 +13,15 @@ public class P2PManager {
 
     private boolean discovering;
 
+    private CommunicationManager commManager;
     private NsdManager nsdManager;
     private NsdManager.DiscoveryListener discoveryListener;
 
-    public P2PManager(Context context, final CommunicationManager commManager) {
-        discovering = false;
-
+    public P2PManager(Context context, CommunicationManager commManager) {
+        this.commManager = commManager;
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
+
+        discovering = false;
 
         discoveryListener = new NsdManager.DiscoveryListener() {
             @Override
@@ -48,25 +50,8 @@ public class P2PManager {
             public void onServiceFound(NsdServiceInfo serviceInfo) {
                 if (!serviceInfo.getServiceType().equals(SERVICE_TYPE)) {
                     Log.e("service type", serviceInfo.getServiceType());
-                } else if (serviceInfo.getServiceName().contains(SetupManager.getDeviceName())) {
-                    nsdManager.resolveService(serviceInfo, new NsdManager.ResolveListener() {
-                        @Override
-                        public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                            Log.e("resolve", Integer.toString(errorCode));
-                        }
-
-                        @Override
-                        public void onServiceResolved(NsdServiceInfo serviceInfo) {
-                            try {
-                                nsdManager.stopServiceDiscovery(discoveryListener);
-                                discovering = false;
-                                commManager.setSocket(new Socket(serviceInfo.getHost(), serviceInfo.getPort()));
-                                Log.d("status", "connected socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
+                } else if (serviceInfo.getServiceName().contains(AppManager.getDeviceName())) {
+                    nsdManager.resolveService(serviceInfo, initResolveListener());
                 } else {
                     Log.e("service name", serviceInfo.getServiceName());
                 }
@@ -85,7 +70,31 @@ public class P2PManager {
     }
 
     public void onDestroy() {
-        if (discovering)
+        if (discovering) {
             nsdManager.stopServiceDiscovery(discoveryListener);
+            discovering = false;
+        }
+    }
+
+    private NsdManager.ResolveListener initResolveListener() {
+        return new NsdManager.ResolveListener() {
+            @Override
+            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                Log.e("resolve", Integer.toString(errorCode));
+            }
+
+            @Override
+            public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                try {
+                    if (discovering)
+                        nsdManager.stopServiceDiscovery(discoveryListener);
+                    discovering = false;
+                    commManager.setSocket(new Socket(serviceInfo.getHost(), serviceInfo.getPort()));
+                    Log.d("status", "connected socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
     }
 }

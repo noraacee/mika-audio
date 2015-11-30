@@ -37,7 +37,6 @@ public class CommunicationManager {
     }
 
     public void onDestroy() {
-        Log.d("status", "On destroy");
         for (ReadSocketTask t : readSocketTasks)
             t.cancel(true);
 
@@ -96,7 +95,7 @@ public class CommunicationManager {
 
         @Override
         protected void onPostExecute(Void nothing) {
-            Log.d("status", "Socket at port " + socket.getLocalPort() + "is disconnected");
+            Log.d("status", "socket at port " + socket.getLocalPort() + " is disconnected");
             sockets.remove(socket);
             readSocketTasks.remove(this);
 

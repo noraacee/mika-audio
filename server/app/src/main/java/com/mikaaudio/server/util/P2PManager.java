@@ -14,14 +14,14 @@ public class P2PManager {
 
     private CommunicationManager commManager;
     private NsdManager nsdManager;
-    private NsdManager.RegistrationListener regListener;
+    private NsdManager.RegistrationListener registrationListener;
 
     private AcceptSocketTask acceptSocketTask;
 
     public P2PManager(Context context, CommunicationManager commManager) {
         this.commManager = commManager;
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
-        regListener = new NsdManager.RegistrationListener() {
+        registrationListener = new NsdManager.RegistrationListener() {
             @Override
             public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 Log.e("registration failed", Integer.toString(errorCode));
@@ -43,22 +43,29 @@ public class P2PManager {
                 Log.d("status", "service unregistered");
             }
         };
+
+        try {
+            Log.d("status", "starting service");
+            registerService();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void onDestroy() {
         acceptSocketTask.cancel(true);
-        nsdManager.unregisterService(regListener);
+        nsdManager.unregisterService(registrationListener);
     }
 
     public void registerService() throws IOException {
         ServerSocket server = new ServerSocket(0);
 
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
-        serviceInfo.setServiceName(SetupManager.getDeviceName());
+        serviceInfo.setServiceName(AppManager.getDeviceName());
         serviceInfo.setServiceType(SERVICE_TYPE);
         serviceInfo.setPort(server.getLocalPort());
 
-        nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, regListener);
+        nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener);
 
         acceptSocketTask = new AcceptSocketTask(server);
         acceptSocketTask.execute();

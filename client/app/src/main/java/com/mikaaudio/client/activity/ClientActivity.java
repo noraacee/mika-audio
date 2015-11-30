@@ -14,9 +14,6 @@ import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
 import com.mikaaudio.client.util.StatusManager;
 
-import java.io.IOException;
-import java.net.Socket;
-
 public class ClientActivity extends Activity {
     private Button apps;
     private Button back;
@@ -137,6 +134,7 @@ public class ClientActivity extends Activity {
     protected void onPause() {
         super.onPause();
         p2pManager.onDestroy();
+        commManager.onDestroy();
     }
 
     @Override
