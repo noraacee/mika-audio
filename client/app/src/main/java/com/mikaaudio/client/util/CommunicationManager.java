@@ -6,14 +6,14 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class CommunicationManager {
-    public static final int KEY_CLICK = 0;
-    public static final int KEY_BACK = 1;
-    public static final int KEY_HOME = 2;
-    public static final int KEY_APPS = 3;
-    public static final int KEY_UP = 4;
-    public static final int KEY_DOWN = 5;
-    public static final int KEY_LEFT = 6;
-    public static final int KEY_RIGHT = 7;
+    public static final int KEY_APPS = 187;
+    public static final int KEY_BACK = 4;
+    public static final int KEY_CLICK = 23;
+    public static final int KEY_DOWN = 20;
+    public static final int KEY_HOME = 3;
+    public static final int KEY_LEFT = 21;
+    public static final int KEY_RIGHT = 22;
+    public static final int KEY_UP = 19;
 
     private OutputStream key;
     private PrintWriter msgOut;

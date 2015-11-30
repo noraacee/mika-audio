@@ -9,34 +9,59 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class P2PManager {
-    private static final String COMMAND = "_CMD";
+    private static final String KEY = "_KEY";
     private static final String MESSAGE = "_MSG";
     private static final String SERVICE_TYPE = "_http._tcp.";
 
     private NsdManager nsdManager;
 
-    private ServerSocket cmdSocket;
+    private ServerSocket keySocket;
     private ServerSocket msgSocket;
 
     public P2PManager(Context context) throws IOException {
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
     }
 
-    public ServerSocket getCmdSocket() {
-        return cmdSocket;
+    public ServerSocket getKeySocket() {
+        return keySocket;
     }
 
     public ServerSocket getMsgSocket() {
         return msgSocket;
     }
 
-    public void registerCmdService() throws IOException {
-        cmdSocket = new ServerSocket(0);
+    public void onDestroy() {
+        nsdManager.unregisterService(new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                Log.e("registration failed", Integer.toString(errorCode));
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                Log.e("unregistration failed", Integer.toString(errorCode));
+            }
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                Log.d("service name", serviceInfo.getServiceName());
+                Log.d("status", "service registered");
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+                Log.d("status", "service unregistered");
+            }
+        });
+    }
+
+    public void registerKeyService() throws IOException {
+        keySocket = new ServerSocket(0);
 
         NsdServiceInfo cmdServiceInfo = new NsdServiceInfo();
-        cmdServiceInfo.setServiceName(SetupManager.getDeviceName() + COMMAND);
+        cmdServiceInfo.setServiceName(SetupManager.getDeviceName() + KEY);
         cmdServiceInfo.setServiceType(SERVICE_TYPE);
-        cmdServiceInfo.setPort(cmdSocket.getLocalPort());
+        cmdServiceInfo.setPort(keySocket.getLocalPort());
 
         nsdManager.registerService(cmdServiceInfo, NsdManager.PROTOCOL_DNS_SD, new NsdManager.RegistrationListener() {
             @Override

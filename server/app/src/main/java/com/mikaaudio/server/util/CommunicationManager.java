@@ -15,49 +15,38 @@ public class CommunicationManager {
         RUNNING, STOPPED
     }
 
-    private static final int ACTION_CLICK = 23;
-    private static final int ACTION_BACK = 4;
-    private static final int ACTION_HOME = 3;
-    private static final int ACTION_APPS = 187;
-    private static final int ACTION_UP = 19;
-    private static final int ACTION_DOWN = 20;
-    private static final int ACTION_LEFT = 21;
-    private static final int ACTION_RIGHT = 22;
-
-    private static final int[] ACTIONS = {ACTION_CLICK, ACTION_BACK, ACTION_HOME, ACTION_APPS, ACTION_UP, ACTION_DOWN, ACTION_LEFT, ACTION_RIGHT};
-
-    private static final String COMMAND_INPUT_KEYEVENT = "input keyevent ";
-
-    /*
-    public static final int KEY_CLICK = 0;
-    public static final int KEY_BACK = 1;
-    public static final int KEY_HOME = 2;
-    public static final int KEY_APPS = 3;
-    public static final int KEY_UP = 4;
-    public static final int KEY_DOWN = 5;
-    public static final int KEY_LEFT = 6;
-    public static final int KEY_RIGHT = 7;
-    */
-
     private Mode mode;
 
     private BufferedReader msgIn;
-    private DataOutputStream shell;
     private InputStream keyIn;
+    private SuperUserManager suManager;
 
-    public CommunicationManager(DataOutputStream shell) {
-        this.shell = shell;
+    private ReadKeySocketTask kTask;
+    private ReadMsgSocketTask mTask;
+
+    public CommunicationManager(SuperUserManager suManager) {
+        this.suManager = suManager;
         mode = Mode.STOPPED;
     }
 
     public void listenKey() {
-        if (mode == Mode.RUNNING)
-            new ReadKeySocketTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        if (mode == Mode.RUNNING) {
+            kTask = new ReadKeySocketTask();
+            kTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
     }
 
     public void listenMsg() {
-        if (mode == Mode.RUNNING)
-            new ReadMsgSocketTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        if (mode == Mode.RUNNING) {
+            mTask = new ReadMsgSocketTask();
+            mTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+    }
+
+    public void onDestroy() {
+        mode = Mode.STOPPED;
+        kTask.cancel(true);
+        mTask.cancel(true);
     }
 
     public void setKeySocket(Socket socket) throws IOException {
@@ -77,7 +66,7 @@ public class CommunicationManager {
     private void parse(int key) {
         Log.d("parsing", Integer.toString(key));
         try {
-            shell.writeBytes(COMMAND_INPUT_KEYEVENT + key + "\n");
+            suManager.inputKeyevent(key);
         } catch (IOException e) {
             e.printStackTrace();
         }

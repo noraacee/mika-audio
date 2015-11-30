@@ -4,15 +4,13 @@ import android.widget.TextView;
 
 public class StatusManager {
     private static StatusManager instance;
-
     static {
         instance = new StatusManager();
     }
 
     private TextView statusView;
 
-    private StatusManager() {
-    }
+    private StatusManager() {}
 
     public static StatusManager getInstance() {
         return instance;
