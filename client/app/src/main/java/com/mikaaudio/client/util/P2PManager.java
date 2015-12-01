@@ -5,6 +5,8 @@ import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
+import com.mikaaudio.client.interf.OnConnectListener;
+
 import java.io.IOException;
 import java.net.Socket;
 
@@ -17,8 +19,11 @@ public class P2PManager {
     private NsdManager nsdManager;
     private NsdManager.DiscoveryListener discoveryListener;
 
-    public P2PManager(Context context, CommunicationManager commManager) {
+    private OnConnectListener onConnectListener;
+
+    public P2PManager(Context context, CommunicationManager commManager, OnConnectListener onConnectListener) {
         this.commManager = commManager;
+        this.onConnectListener = onConnectListener;
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
 
         discovering = false;
@@ -43,7 +48,7 @@ public class P2PManager {
 
             @Override
             public void onDiscoveryStopped(String serviceType) {
-                Log.d("status", "discover stopped");
+                Log.d("status", "discovery stopped");
             }
 
             @Override
@@ -93,11 +98,18 @@ public class P2PManager {
                     discovering = false;
 
                     commManager.setSocket(new Socket(serviceInfo.getHost(), serviceInfo.getPort()));
+                    onConnect();
+
                     Log.d("status", "connected socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         };
+    }
+
+    private void onConnect() {
+        if (onConnectListener != null)
+            onConnectListener.onConnect();
     }
 }

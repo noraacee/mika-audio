@@ -1,7 +1,6 @@
 package com.mikaaudio.client.activity;
 
 import android.app.Activity;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -9,6 +8,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.mikaaudio.client.R;
+import com.mikaaudio.client.interf.OnConnectListener;
 import com.mikaaudio.client.interf.OnDisconnectListener;
 import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
@@ -43,7 +43,7 @@ public class ClientActivity extends Activity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //commManager.write(sendView.getText().toString());
+                commManager.write(sendView.getText().toString());
             }
         });
 
@@ -125,7 +125,26 @@ public class ClientActivity extends Activity {
                 p2pManager.connect();
             }
         });
-        p2pManager = new P2PManager(this, commManager);
+        p2pManager = new P2PManager(this, commManager, new OnConnectListener() {
+            @Override
+            public void onConnect() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        send.setEnabled(true);
+                        click.setEnabled(true);
+                        back.setEnabled(true);
+                        home.setEnabled(true);
+                        apps.setEnabled(true);
+                        up.setEnabled(true);
+                        down.setEnabled(true);
+                        left.setEnabled(true);
+                        right.setEnabled(true);
+                        sendView.setEnabled(true);
+                    }
+                });
+            }
+        });
 
         p2pManager.connect();
     }
@@ -135,33 +154,5 @@ public class ClientActivity extends Activity {
         super.onPause();
         p2pManager.onDestroy();
         commManager.onDestroy();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    private class ConnectServerTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... nothing) {
-            p2pManager.connect();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void nothing) {
-            send.setEnabled(true);
-            click.setEnabled(true);
-            back.setEnabled(true);
-            home.setEnabled(true);
-            apps.setEnabled(true);
-            up.setEnabled(true);
-            down.setEnabled(true);
-            left.setEnabled(true);
-            right.setEnabled(true);
-            sendView.setEnabled(true);
-        }
     }
 }

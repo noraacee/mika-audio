@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommunicationManager {
+    private static final int MODE_KEY = 0;
+    private static final int MODE_STRING = 1;
     private static final int SOCKET_TIMEOUT = 60000;
+
     private SuperUserManager suManager;
 
     private List<Socket> sockets;

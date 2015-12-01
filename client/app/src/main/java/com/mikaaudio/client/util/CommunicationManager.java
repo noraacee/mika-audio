@@ -8,6 +8,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class CommunicationManager {
+    public static final int MODE_KEY = 0;
+    public static final int MODE_STRING = 1;
+
     public static final int KEY_APPS = 187;
     public static final int KEY_BACK = 4;
     public static final int KEY_CLICK = 23;
@@ -23,8 +26,8 @@ public class CommunicationManager {
     private PrintWriter outString;
     private Socket socket;
 
-    public CommunicationManager(OnDisconnectListener dListener) {
-        this.onDisconnectListener = dListener;
+    public CommunicationManager(OnDisconnectListener onDisconnectListener) {
+        this.onDisconnectListener = onDisconnectListener;
     }
 
     public void onDestroy() {
@@ -42,9 +45,20 @@ public class CommunicationManager {
         outString = new PrintWriter(outByte);
     }
 
-    public void write(int cmd) {
+    public void write(int key) {
         try {
-            outByte.write(cmd);
+            outByte.write(MODE_KEY);
+            outByte.write(key);
+        } catch (IOException e) {
+            onDisconnect();
+        }
+    }
+
+    public void write(String input) {
+        try {
+            outByte.write(MODE_STRING);
+            outString.write(input);
+            outString.flush();
         } catch (IOException e) {
             onDisconnect();
         }
