@@ -24,11 +24,4 @@ public class StatusManager {
         if (statusView != null)
             statusView.setText(status);
     }
-
-    public void appendStatus(String status) {
-        if (statusView != null) {
-            String currStats = statusView.getText().toString();
-            statusView.setText(currStats + "\n" + status);
-        }
-    }
 }

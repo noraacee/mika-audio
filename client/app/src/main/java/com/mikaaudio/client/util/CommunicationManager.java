@@ -1,5 +1,7 @@
 package com.mikaaudio.client.util;
 
+import android.util.Log;
+
 import com.mikaaudio.client.interf.OnDisconnectListener;
 
 import java.io.IOException;
@@ -42,10 +44,12 @@ public class CommunicationManager {
     public void setSocket(Socket socket) throws IOException {
         this.socket = socket;
         outByte = socket.getOutputStream();
-        outString = new PrintWriter(outByte);
+        outString = new PrintWriter(outByte, true);
     }
 
     public void write(int key) {
+        Log.d("sending", Integer.toString(key));
+
         try {
             outByte.write(MODE_KEY);
             outByte.write(key);
@@ -55,10 +59,11 @@ public class CommunicationManager {
     }
 
     public void write(String input) {
+        Log.d("sending", input);
+
         try {
             outByte.write(MODE_STRING);
-            outString.write(input);
-            outString.flush();
+            outString.println(input);
         } catch (IOException e) {
             onDisconnect();
         }

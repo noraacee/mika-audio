@@ -1,8 +1,11 @@
 package com.mikaaudio.client.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -10,45 +13,56 @@ import android.widget.TextView;
 import com.mikaaudio.client.R;
 import com.mikaaudio.client.interf.OnConnectListener;
 import com.mikaaudio.client.interf.OnDisconnectListener;
+import com.mikaaudio.client.interf.OnDispatchKeyEventListener;
 import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
 import com.mikaaudio.client.util.StatusManager;
+import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
 
 public class ClientActivity extends Activity {
+    private boolean sendViewShown;
+
     private Button apps;
     private Button back;
     private Button click;
     private Button down;
     private Button home;
+    private Button keyboard;
     private Button left;
     private Button right;
     private Button send;
+    private Button string;
     private Button up;
     private EditText sendView;
+    private InterceptKeyEventLinearLayout contentView;
 
-    private P2PManager p2pManager;
     private CommunicationManager commManager;
+    private InputMethodManager inputMethodManager;
+    private P2PManager p2pManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
 
-        StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
-        sendView = (EditText) findViewById(R.id.message_to_send);
-        sendView.setEnabled(false);
+        sendViewShown = false;
 
-        send = (Button) findViewById(R.id.send);
-        send.setEnabled(false);
-        send.setOnClickListener(new View.OnClickListener() {
+        StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
+
+        contentView = (InterceptKeyEventLinearLayout) findViewById(R.id.content_view);
+        contentView.setOnDispatchKeyEventListener(new OnDispatchKeyEventListener() {
             @Override
-            public void onClick(View v) {
-                commManager.write(sendView.getText().toString());
+            public boolean onDispatchKeyEvent(KeyEvent keyEvent) {
+                if (!sendViewShown && keyEvent.getAction() == KeyEvent.ACTION_UP) {
+                    commManager.write(keyEvent.getKeyCode());
+                    return true;
+                }
+
+                return false;
             }
         });
 
         click = (Button) findViewById(R.id.click);
-        click.setEnabled(false);
         click.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,7 +71,6 @@ public class ClientActivity extends Activity {
         });
 
         back = (Button) findViewById(R.id.back);
-        back.setEnabled(false);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,7 +79,6 @@ public class ClientActivity extends Activity {
         });
 
         home = (Button) findViewById(R.id.home);
-        home.setEnabled(false);
         home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,7 +87,6 @@ public class ClientActivity extends Activity {
         });
 
         apps = (Button) findViewById(R.id.apps);
-        apps.setEnabled(false);
         apps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,7 +95,6 @@ public class ClientActivity extends Activity {
         });
 
         up = (Button) findViewById(R.id.up);
-        up.setEnabled(false);
         up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -93,7 +103,6 @@ public class ClientActivity extends Activity {
         });
 
         down = (Button) findViewById(R.id.down);
-        down.setEnabled(false);
         down.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,7 +111,6 @@ public class ClientActivity extends Activity {
         });
 
         left = (Button) findViewById(R.id.left);
-        left.setEnabled(false);
         left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -111,7 +119,6 @@ public class ClientActivity extends Activity {
         });
 
         right = (Button) findViewById(R.id.right);
-        right.setEnabled(false);
         right.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -119,28 +126,76 @@ public class ClientActivity extends Activity {
             }
         });
 
+        keyboard = (Button) findViewById(R.id.keyboard);
+        keyboard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (sendViewShown) {
+                    sendView.setVisibility(View.GONE);
+                    send.setVisibility(View.GONE);
+                    sendViewShown = false;
+                    sendView.clearFocus();
+                }
+
+                contentView.requestFocus();
+
+                inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+            }
+        });
+
+        string = (Button) findViewById(R.id.string);
+        string.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (sendViewShown) {
+                    sendView.setVisibility(View.GONE);
+                    send.setVisibility(View.GONE);
+                    sendViewShown = false;
+                    sendView.clearFocus();
+                } else {
+                    sendView.setVisibility(View.VISIBLE);
+                    send.setVisibility(View.VISIBLE);
+                    sendViewShown = true;
+                    sendView.requestFocus();
+                }
+            }
+        });
+
+        sendView = (EditText) findViewById(R.id.message_to_send);
+
+        send = (Button) findViewById(R.id.send);
+        send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                commManager.write(sendView.getText().toString());
+                sendView.setText("");
+            }
+        });
+
+        setEnabled(false);
+
+        inputMethodManager = (InputMethodManager) ClientActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
+
         commManager = new CommunicationManager(new OnDisconnectListener() {
             @Override
             public void onDisconnect() {
+                StatusManager.getInstance().setStatus("disconnected");
+
+                setEnabled(false);
+
                 p2pManager.connect();
             }
         });
+
         p2pManager = new P2PManager(this, commManager, new OnConnectListener() {
             @Override
             public void onConnect() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        send.setEnabled(true);
-                        click.setEnabled(true);
-                        back.setEnabled(true);
-                        home.setEnabled(true);
-                        apps.setEnabled(true);
-                        up.setEnabled(true);
-                        down.setEnabled(true);
-                        left.setEnabled(true);
-                        right.setEnabled(true);
-                        sendView.setEnabled(true);
+                        StatusManager.getInstance().setStatus("connected");
+
+                        setEnabled(true);
                     }
                 });
             }
@@ -154,5 +209,20 @@ public class ClientActivity extends Activity {
         super.onPause();
         p2pManager.onDestroy();
         commManager.onDestroy();
+    }
+
+    private void setEnabled(boolean enabled) {
+        click.setEnabled(enabled);
+        back.setEnabled(enabled);
+        home.setEnabled(enabled);
+        apps.setEnabled(enabled);
+        up.setEnabled(enabled);
+        down.setEnabled(enabled);
+        left.setEnabled(enabled);
+        right.setEnabled(enabled);
+        keyboard.setEnabled(enabled);
+        string.setEnabled(enabled);
+        sendView.setEnabled(enabled);
+        send.setEnabled(enabled);
     }
 }

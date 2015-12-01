@@ -51,15 +51,15 @@ public class RemoteService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent.hasExtra(SERVICE_STOP)) {
+        if (intent != null && intent.hasExtra(SERVICE_STOP)) {
             stopForeground(true);
             stopSelf();
-            return -1;
+            return START_NOT_STICKY;
         }
 
         if (running) {
             Log.d("status", "service already running");
-            return -1;
+            return START_NOT_STICKY;
         }
 
         running = true;

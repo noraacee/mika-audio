@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<com.mikaaudio.client.widget.InterceptKeyEventLinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content_view"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -48,14 +51,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="right" />
+    <Button
+        android:id="@+id/keyboard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="keyboard"/>
+    <Button
+        android:id="@+id/string"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="string"/>
     <EditText
         android:id="@+id/message_to_send"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="text" />
+        android:inputType="text"
+        android:visibility="gone"/>
     <Button
         android:id="@+id/send"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/send" />
-</LinearLayout>
+        android:text="send"
+        android:visibility="gone"/>
+</com.mikaaudio.client.widget.InterceptKeyEventLinearLayout>
