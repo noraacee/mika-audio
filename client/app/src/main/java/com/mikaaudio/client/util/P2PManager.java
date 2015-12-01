@@ -65,8 +65,10 @@ public class P2PManager {
     }
 
     public void connect() {
-        nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
-        discovering = true;
+        if (!discovering) {
+            nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+            discovering = true;
+        }
     }
 
     public void onDestroy() {
@@ -89,6 +91,7 @@ public class P2PManager {
                     if (discovering)
                         nsdManager.stopServiceDiscovery(discoveryListener);
                     discovering = false;
+
                     commManager.setSocket(new Socket(serviceInfo.getHost(), serviceInfo.getPort()));
                     Log.d("status", "connected socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
                 } catch (IOException e) {

@@ -22,7 +22,9 @@ public class ServerActivity extends Activity{
         findViewById(R.id.end).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService(new Intent(ServerActivity.this, RemoteService.class));
+                Intent i = new Intent(ServerActivity.this, RemoteService.class);
+                i.putExtra(RemoteService.SERVICE_STOP, true);
+                startService(i);
             }
         });
 

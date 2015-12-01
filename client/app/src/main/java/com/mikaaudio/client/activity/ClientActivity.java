@@ -122,12 +122,12 @@ public class ClientActivity extends Activity {
         commManager = new CommunicationManager(new OnDisconnectListener() {
             @Override
             public void onDisconnect() {
-                new ConnectServerTask().execute();
+                p2pManager.connect();
             }
         });
         p2pManager = new P2PManager(this, commManager);
 
-        new ConnectServerTask().execute();
+        p2pManager.connect();
     }
 
     @Override

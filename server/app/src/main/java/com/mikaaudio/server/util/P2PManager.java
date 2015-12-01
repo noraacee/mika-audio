@@ -43,13 +43,6 @@ public class P2PManager {
                 Log.d("status", "service unregistered");
             }
         };
-
-        try {
-            Log.d("status", "starting service");
-            registerService();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void onDestroy() {
