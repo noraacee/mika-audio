@@ -56,6 +56,7 @@ public class P2PManager {
                 if (!serviceInfo.getServiceType().equals(SERVICE_TYPE)) {
                     Log.e("service type", serviceInfo.getServiceType());
                 } else if (serviceInfo.getServiceName().contains(AppManager.getDeviceName())) {
+                    Log.d("status", "connecting to " + serviceInfo.getServiceName());
                     nsdManager.resolveService(serviceInfo, initResolveListener());
                 } else {
                     Log.e("service name", serviceInfo.getServiceName());
