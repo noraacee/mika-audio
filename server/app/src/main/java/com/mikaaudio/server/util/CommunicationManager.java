@@ -38,8 +38,8 @@ public class CommunicationManager {
         sockets.add(socket);
 
         ReadSocketTask readSocketTask = new ReadSocketTask(socket);
-        readSocketTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         readSocketTasks.add(readSocketTask);
+        readSocketTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void onDestroy() {

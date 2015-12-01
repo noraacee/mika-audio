@@ -94,7 +94,6 @@ public class P2PManager {
             public void onServiceResolved(NsdServiceInfo serviceInfo) {
                 try {
                     Socket socket = new Socket(serviceInfo.getHost(), serviceInfo.getPort());
-
                     if (discovering)
                         nsdManager.stopServiceDiscovery(discoveryListener);
                     discovering = false;

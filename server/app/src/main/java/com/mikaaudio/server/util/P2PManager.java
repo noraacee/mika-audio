@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 public class P2PManager {
     private static final String SERVICE_TYPE = "_http._tcp.";
@@ -61,7 +62,7 @@ public class P2PManager {
         nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener);
 
         acceptSocketTask = new AcceptSocketTask(server);
-        acceptSocketTask.execute();
+        acceptSocketTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private class AcceptSocketTask extends AsyncTask<Void, Void, Void> {
@@ -75,8 +76,11 @@ public class P2PManager {
         protected Void doInBackground(Void... params) {
             try {
                 //noinspection InfiniteLoopStatement
-                while(true)
-                    commManager.addSocket(serverSocket.accept());
+                while(true) {
+                    Log.d("status", "accepting socket");
+                    Socket socket = serverSocket.accept();
+                    commManager.addSocket(socket);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
