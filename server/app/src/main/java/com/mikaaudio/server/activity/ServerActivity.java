@@ -13,6 +13,8 @@ import com.mikaaudio.server.service.RemoteService;
 import com.mikaaudio.server.util.StatusManager;
 
 public class ServerActivity extends Activity{
+    private static final String LIBRARY_SERVER = "server";
+
     private Button end;
     private Button start;
 
@@ -54,5 +56,7 @@ public class ServerActivity extends Activity{
 
         startService(new Intent(this, RemoteService.class));
         StatusManager.getInstance().setStatus("service started");
+
+        System.loadLibrary(LIBRARY_SERVER);
     }
 }
