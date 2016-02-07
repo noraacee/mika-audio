@@ -4,7 +4,7 @@
 
     <item
             android:id="@+id/action_mode"
-            android:icon="@drawable/ic_view_module_white_48dp"
+            android:icon="@drawable/ic_module"
             android:title="@string/mode_menu"
             app:showAsAction="always"/>
 

@@ -3,6 +3,8 @@ package com.mikaaudio.client.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,7 +14,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import android.widget.Toolbar;
 import com.mikaaudio.client.R;
 import com.mikaaudio.client.interf.OnConnectListener;
 import com.mikaaudio.client.interf.OnDisconnectListener;
@@ -20,12 +21,9 @@ import com.mikaaudio.client.interf.OnDispatchKeyEventListener;
 import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
 import com.mikaaudio.client.util.StatusManager;
-import com.mikaaudio.client.util.ToolbarManager;
 import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
 
-import static com.mikaaudio.client.util.ToolbarManager.setSupportActionBar;
-
-public class ClientActivity extends Activity {
+public class ClientActivity extends AppCompatActivity {
     private boolean sendViewShown;
 
     private Button apps;
@@ -52,6 +50,8 @@ public class ClientActivity extends Activity {
         setContentView(R.layout.activity_client);
         Toolbar myToolbar = (Toolbar)  findViewById(R.id.tool_bar);
         setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.drawable.ic_launcher_);
 
         sendViewShown = false;
 
