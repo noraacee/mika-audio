@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.mikaaudio.client.widget.InterceptKeyEventLinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/content_view"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/content_view"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical"
+        android:background="@color/windowBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <include
+            android:id="@+id/tool_bar"
+            layout="@layout/tool_bar"/>
+
     <TextView
         android:id="@+id/status"
         android:layout_width="match_parent"

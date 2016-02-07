@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">client</string>
+    <string name="app_name">Mika Remote</string>
+    <string name="mode_menu">Mode Menu</string>
 </resources>

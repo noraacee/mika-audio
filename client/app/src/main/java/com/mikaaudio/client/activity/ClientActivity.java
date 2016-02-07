@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import android.widget.Toolbar;
 import com.mikaaudio.client.R;
 import com.mikaaudio.client.interf.OnConnectListener;
 import com.mikaaudio.client.interf.OnDisconnectListener;
@@ -17,7 +20,10 @@ import com.mikaaudio.client.interf.OnDispatchKeyEventListener;
 import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
 import com.mikaaudio.client.util.StatusManager;
+import com.mikaaudio.client.util.ToolbarManager;
 import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
+
+import static com.mikaaudio.client.util.ToolbarManager.setSupportActionBar;
 
 public class ClientActivity extends Activity {
     private boolean sendViewShown;
@@ -44,6 +50,8 @@ public class ClientActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
+        Toolbar myToolbar = (Toolbar)  findViewById(R.id.tool_bar);
+        setSupportActionBar(myToolbar);
 
         sendViewShown = false;
 
@@ -210,6 +218,29 @@ public class ClientActivity extends Activity {
         p2pManager.onDestroy();
         commManager.onDestroy();
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_mode:
+                // User chose the "Settings" item, show the app settings UI...
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.mode_menu, menu);
+        return true;
+    }
+
 
     private void setEnabled(boolean enabled) {
         click.setEnabled(enabled);
