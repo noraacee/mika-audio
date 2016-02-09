@@ -24,7 +24,7 @@ public class RemoteService extends Service {
     private static final int NOTIFICATION_ID = 1;
 
     private static final String NOTIFICATION_TEXT = "Mika Audio";
-    private static final String NOTIFICATION_TITLE = "Remote control server running";
+    private static final String NOTIFICATION_TITLE = "Remote control Server running";
 
     private boolean running;
 
