@@ -1,4 +1,4 @@
-package com.mikaaudio.server.util;
+package com.mikaaudio.server.manager;
 
 public class AppManager {
     private static final String DEVICE_NAME = "MIKA AUDIO";

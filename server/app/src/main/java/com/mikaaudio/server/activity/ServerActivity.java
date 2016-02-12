@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.mikaaudio.server.R;
 
 import com.mikaaudio.server.service.RemoteService;
-import com.mikaaudio.server.util.StatusManager;
+import com.mikaaudio.server.manager.StatusManager;
 
 public class ServerActivity extends Activity{
     private Button end;

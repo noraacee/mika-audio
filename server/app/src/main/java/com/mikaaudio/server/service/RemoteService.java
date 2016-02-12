@@ -11,9 +11,9 @@ import android.util.Log;
 
 import com.mikaaudio.server.R;
 import com.mikaaudio.server.activity.ServerActivity;
-import com.mikaaudio.server.util.CommunicationManager;
-import com.mikaaudio.server.util.FrameManager;
-import com.mikaaudio.server.util.P2PManager;
+import com.mikaaudio.server.manager.CommunicationManager;
+import com.mikaaudio.server.manager.FrameManager;
+import com.mikaaudio.server.manager.P2PManager;
 
 import java.io.IOException;
 
