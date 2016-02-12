@@ -19,14 +19,10 @@ public class CommunicationManager {
 
     private static final int SOCKET_TIMEOUT = 60000;
 
-    private SuperUserManager suManager;
-
     private List<Socket> sockets;
     private List<ReadSocketTask> readSocketTasks;
 
-    public CommunicationManager(SuperUserManager suManager) {
-        this.suManager = suManager;
-
+    public CommunicationManager() {
         sockets = new ArrayList<>();
         readSocketTasks = new ArrayList<>();
     }
