@@ -3,17 +3,16 @@ package com.mikaaudio.client.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mikaaudio.client.R;
 import com.mikaaudio.client.interf.OnConnectListener;
 import com.mikaaudio.client.interf.OnDisconnectListener;
-import com.mikaaudio.client.interf.OnDispatchKeyEventListener;
 import com.mikaaudio.client.util.CommunicationManager;
 import com.mikaaudio.client.util.P2PManager;
 import com.mikaaudio.client.util.StatusManager;
@@ -49,7 +48,7 @@ public class ClientActivity extends Activity {
 
         StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
 
-        contentView = (InterceptKeyEventLinearLayout) findViewById(R.id.content_view);
+        /*contentView = (InterceptKeyEventLinearLayout) findViewById(R.id.content_view);
         contentView.setOnDispatchKeyEventListener(new OnDispatchKeyEventListener() {
             @Override
             public boolean onDispatchKeyEvent(KeyEvent keyEvent) {
@@ -170,22 +169,32 @@ public class ClientActivity extends Activity {
                 commManager.write(sendView.getText().toString());
                 sendView.setText("");
             }
-        });
+        });*/
 
-        setEnabled(false);
+        //setEnabled(false);
 
         inputMethodManager = (InputMethodManager) ClientActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        Button toggled = (Button) findViewById(R.id.toggle);
+        toggled.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                commManager.toggleDisplay();
+            }
+        });
 
         commManager = new CommunicationManager(new OnDisconnectListener() {
             @Override
             public void onDisconnect() {
                 StatusManager.getInstance().setStatus("disconnected");
 
-                setEnabled(false);
+                //setEnabled(false);
 
                 p2pManager.connect();
             }
         });
+
+        commManager.setFrameView((ImageView) findViewById(R.id.frame));
 
         p2pManager = new P2PManager(this, commManager, new OnConnectListener() {
             @Override
@@ -195,7 +204,7 @@ public class ClientActivity extends Activity {
                     public void run() {
                         StatusManager.getInstance().setStatus("connected");
 
-                        setEnabled(true);
+                        //setEnabled(true);
                     }
                 });
             }

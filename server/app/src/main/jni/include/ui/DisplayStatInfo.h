@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright 2014 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef _CUTILS_TZTIME_H
-#define _CUTILS_TZTIME_H
+#ifndef ANDROID_UI_DISPLAY_STAT_INFO_H
+#define ANDROID_UI_DISPLAY_STAT_INFO_H
 
-// TODO: fix both callers to just include <bionic_time.h> themselves.
-#include <bionic_time.h>
+#include <utils/Timers.h>
 
-#endif /* __CUTILS_TZTIME_H */ 
+namespace android {
 
+struct DisplayStatInfo {
+    nsecs_t vsyncTime;
+    nsecs_t vsyncPeriod;
+};
+
+}; // namespace android
+
+#endif // ANDROID_COMPOSER_DISPLAY_STAT_INFO_H

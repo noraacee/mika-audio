@@ -14,13 +14,15 @@ public class P2PManager {
     private static final String SERVICE_TYPE = "_http._tcp.";
 
     private CommunicationManager commManager;
+    private FrameManager frameManager;
     private NsdManager nsdManager;
     private NsdManager.RegistrationListener registrationListener;
 
     private AcceptSocketTask acceptSocketTask;
 
-    public P2PManager(Context context, CommunicationManager commManager) {
+    public P2PManager(Context context, CommunicationManager commManager, FrameManager frameManager) {
         this.commManager = commManager;
+        this.frameManager = frameManager;
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         registrationListener = new NsdManager.RegistrationListener() {
             @Override
@@ -79,7 +81,10 @@ public class P2PManager {
                 while(true) {
                     Log.d("status", "accepting socket");
                     Socket socket = serverSocket.accept();
-                    commManager.addSocket(socket);
+
+                    frameManager.addSocket(socket);
+
+                    //commManager.addSocket(socket);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

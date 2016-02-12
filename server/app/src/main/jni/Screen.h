@@ -3,29 +3,28 @@
 
 #include <android/log.h>
 
-#include <binder/IServiceManager.h>
-
-#include <gui/BufferQueue.h>
 #include <gui/ISurfaceComposer.h>
 #include <gui/SurfaceComposerClient.h>
-
-#include <ui/DisplayInfo.h>
-
-#include <utils/RefBase.h>
 
 #include <string>
 
 namespace android {
-    class Screen : public BufferQueue::ConsumerListener {
+    class Screen {
+
     public:
-        Screen() {};
-        virtual ~Screen() {};
 
-        std::string init();
+        Screen(uint32_t width, uint32_t height);
+        ~Screen();
 
-    protected:
-        virtual void onFrameAvailable() {};
-        virtual void onBuffersReleased() {};
+        int initCheck();
+        int updateFrame(char* bitmapPtr);
+
+    private:
+        ScreenshotClient* client;
+        sp<IBinder> display;
+        Rect* sourceCrop;
+        uint32_t width, height, size, stride;
+        char* bitmap;
     };
 }
 

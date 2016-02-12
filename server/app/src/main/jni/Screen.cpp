@@ -1,46 +1,39 @@
 #include "Screen.h"
 
 namespace android {
+    Screen::Screen(uint32_t w, uint32_t h) {
+        client = new ScreenshotClient();
+        display = SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain);
+        sourceCrop = new Rect();
+        width = w;
+        height = h;
+    }
 
-    std::string Screen::init() {
-        const String16 name("SurfaceFlinger");
-        sp <ISurfaceComposer> composer;
-        getService(name, &composer);
+    int Screen::initCheck() {
+        if (display == NULL)
+            return 1;
 
-        sp<IBinder> display = SurfaceComposerClient::getBuiltInDisplay(
-                ISurfaceComposer::eDisplayIdMain);
-        DisplayInfo displayInfo;
-        status_t err = SurfaceComposerClient::getDisplayInfo(display, &displayInfo);
-        __android_log_print(ANDROID_LOG_VERBOSE, "mikaaudio", "getDisplayInfo: %d", err);
+        return 0;
+    };
 
-        sp <BufferQueue> bufferQueue = new BufferQueue();
-        wp <BufferQueue::ConsumerListener> listener = static_cast<BufferQueue::ConsumerListener *>(this);
-        sp <BufferQueue::ProxyConsumerListener> proxy = new BufferQueue::ProxyConsumerListener(
-                listener);
+    int Screen::updateFrame(char* bitmapPtr) {
+        status_t err = client->update(display, *sourceCrop, width, height, false);
+        if (err != NO_ERROR)
+            return err;
 
-        //err = bufferQueue->consumerConnect(proxy, false);
-        __android_log_print(ANDROID_LOG_VERBOSE, "mikaaudio", "consumerConnect: %d", err);
+        stride = client->getStride();
+        bitmap = (char*) client->getPixels();
 
+        int h, w;
+        for (h = 0; h < height; h++) {
+            for (w = 0; w < width; w++) {
+                *(bitmapPtr + h * (width * 4) + w * 4) = *(bitmap + h * (width * 4 + stride) + w * 4);
+                *(bitmapPtr + h * (width * 4) + w * 4 + 1) = *(bitmap + h * (width * 4 + stride) + w * 4 + 1);
+                *(bitmapPtr + h * (width * 4) + w * 4 + 2) = *(bitmap + h * (width * 4 + stride) + w * 4 + 2);
+                *(bitmapPtr + h * (width * 4) + w * 4 + 3) = *(bitmap + h * (width * 4 + stride) + w * 4 + 3);
+            }
+        }
 
-        uint32_t w, h;
-        err = composer->captureScreen(display, bufferQueue, w, h, 0, 0);
-        __android_log_print(ANDROID_LOG_VERBOSE, "mikaaudio", "captureScreen: %d", err);
-
-        /*
-        BufferQueue::BufferItem item;
-        err = bufferQueue->acquireBuffer(&item, 0);
-        if (err == BufferQueue::NO_BUFFER_AVAILABLE)
-            return "2";
-        else if (err == NO_ERROR)
-            return "3";
-        else if (err == INVALID_OPERATION)
-            return "4";
-        else if (err == BufferQueue::PRESENT_LATER)
-            return "5";
-        else if (err == BufferQueue::NO_CONNECTED_API)
-            return "6";*/
-
-
-        return "7";
+        return NO_ERROR;
     }
 }

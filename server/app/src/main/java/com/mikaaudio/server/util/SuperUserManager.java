@@ -17,8 +17,8 @@ public class SuperUserManager {
 
     public SuperUserManager() throws IOException {
         keyCharMap = KeyCharacterMap.load(KeyCharacterMap.ALPHA);
-        su = Runtime.getRuntime().exec(SUPER_USER);
-        shell = new DataOutputStream(su.getOutputStream());
+        //su = Runtime.getRuntime().exec(SUPER_USER);
+        //shell = new DataOutputStream(su.getOutputStream());
     }
 
     public void inputKeyEvent(int key) throws IOException {
@@ -35,13 +35,13 @@ public class SuperUserManager {
     }
 
     public void onDestroy() {
-        try {
+        /*try {
             shell.writeBytes(COMMAND_EXIT);
             shell.flush();
             su.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     private void runCommand(String cmd) throws IOException {

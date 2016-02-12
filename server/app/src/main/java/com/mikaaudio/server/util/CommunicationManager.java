@@ -109,13 +109,14 @@ public class CommunicationManager {
                                 break;
                         }
                     } catch (SocketTimeoutException ste) {
-                        try {
-                            out.write(0);
-                        } catch (IOException ioe) {
-                            break;
-                        }
+                        out.write(0);
                     }
                 }
+
+                inByte.close();
+                inString.close();
+                out.flush();
+                out.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }

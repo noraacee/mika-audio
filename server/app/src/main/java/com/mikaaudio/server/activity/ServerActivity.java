@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.mikaaudio.server.R;
 
@@ -14,8 +13,6 @@ import com.mikaaudio.server.service.RemoteService;
 import com.mikaaudio.server.util.StatusManager;
 
 public class ServerActivity extends Activity{
-    private static final String LIBRARY_SERVER = "server";
-
     private Button end;
     private Button start;
 
@@ -58,10 +55,5 @@ public class ServerActivity extends Activity{
         startService(new Intent(this, RemoteService.class));
         StatusManager.getInstance().setStatus("service started");
 
-        System.loadLibrary(LIBRARY_SERVER);
-
-        Toast.makeText(this, init(), Toast.LENGTH_LONG).show();
     }
-
-    public native String init();
 }

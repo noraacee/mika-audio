@@ -3,7 +3,8 @@
 
 #include "Screen.h"
 
+#include <android/bitmap.h>
+
 #include <jni.h>
-#include <sys/types.h>
 
 #endif //SERVER_SERVER_H
