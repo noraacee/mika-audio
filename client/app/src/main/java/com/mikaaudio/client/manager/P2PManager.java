@@ -1,34 +1,46 @@
-package com.mikaaudio.client.util;
+package com.mikaaudio.client.manager;
 
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
-import com.mikaaudio.client.interf.OnConnectListener;
-
 import java.io.IOException;
-import java.net.Socket;
 
 public class P2PManager {
     private static final String SERVICE_TYPE = "_http._tcp.";
 
     private boolean discovering;
 
-    private CommunicationManager commManager;
+    private ModuleManager moduleManager;
     private NsdManager nsdManager;
     private NsdManager.DiscoveryListener discoveryListener;
 
-    private OnConnectListener onConnectListener;
+    public P2PManager(Context context, ModuleManager moduleManager) {
+        this.moduleManager = moduleManager;
 
-    public P2PManager(Context context, CommunicationManager commManager, OnConnectListener onConnectListener) {
-        this.commManager = commManager;
-        this.onConnectListener = onConnectListener;
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
 
         discovering = false;
+        discoveryListener = initDiscoveryListener();
+    }
 
-        discoveryListener = new NsdManager.DiscoveryListener() {
+    public void connect() {
+        if (!discovering) {
+            discovering = true;
+            nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+        }
+    }
+
+    public void onDestroy() {
+        if (discovering) {
+            discovering = false;
+            nsdManager.stopServiceDiscovery(discoveryListener);
+        }
+    }
+
+    private NsdManager.DiscoveryListener initDiscoveryListener() {
+        return new NsdManager.DiscoveryListener() {
             @Override
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
                 Log.e("start discover failed", Integer.toString(errorCode));
@@ -70,20 +82,6 @@ public class P2PManager {
         };
     }
 
-    public void connect() {
-        if (!discovering) {
-            discovering = true;
-            nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
-        }
-    }
-
-    public void onDestroy() {
-        if (discovering) {
-            discovering = false;
-            nsdManager.stopServiceDiscovery(discoveryListener);
-        }
-    }
-
     private NsdManager.ResolveListener initResolveListener() {
         return new NsdManager.ResolveListener() {
             @Override
@@ -94,13 +92,12 @@ public class P2PManager {
             @Override
             public void onServiceResolved(NsdServiceInfo serviceInfo) {
                 try {
-                    Socket socket = new Socket(serviceInfo.getHost(), serviceInfo.getPort());
+                    moduleManager.setSocket(serviceInfo.getHost(), serviceInfo.getPort());
+
                     if (discovering)
                         nsdManager.stopServiceDiscovery(discoveryListener);
                     discovering = false;
 
-                    commManager.setSocket(socket);
-                    onConnect();
 
                     Log.d("status", "connected socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
                 } catch (IOException e) {
@@ -108,10 +105,5 @@ public class P2PManager {
                 }
             }
         };
-    }
-
-    private void onConnect() {
-        if (onConnectListener != null)
-            onConnectListener.onConnect();
     }
 }

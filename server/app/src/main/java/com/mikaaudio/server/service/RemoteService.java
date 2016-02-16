@@ -11,8 +11,6 @@ import android.util.Log;
 
 import com.mikaaudio.server.R;
 import com.mikaaudio.server.activity.ServerActivity;
-import com.mikaaudio.server.manager.CommunicationManager;
-import com.mikaaudio.server.manager.FrameManager;
 import com.mikaaudio.server.manager.P2PManager;
 
 import java.io.IOException;
@@ -28,10 +26,7 @@ public class RemoteService extends Service {
 
     private boolean running;
 
-    private CommunicationManager commManager;
-    private FrameManager frameManager;
     private P2PManager p2pManager;
-    private SuperUserManager suManager;
 
     public RemoteService() {
         super();
@@ -41,14 +36,7 @@ public class RemoteService extends Service {
     public void onCreate() {
         running = false;
         Log.d("status", "created");
-        try {
-            frameManager = new FrameManager();
-            suManager = new SuperUserManager();
-            commManager = new CommunicationManager(suManager);
-            p2pManager = new P2PManager(getApplicationContext(), commManager, frameManager);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        p2pManager = new P2PManager(getApplicationContext());
     }
 
     @Override
@@ -101,9 +89,6 @@ public class RemoteService extends Service {
 
     @Override
     public void onDestroy() {
-        commManager.onDestroy();
-        frameManager.onDestroy();
         p2pManager.onDestroy();
-        suManager.onDestroy();
     }
 }

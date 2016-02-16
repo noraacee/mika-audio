@@ -3,26 +3,24 @@ package com.mikaaudio.server.manager;
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
-import android.os.AsyncTask;
 import android.util.Log;
+
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 public class P2PManager {
     private static final String SERVICE_TYPE = "_http._tcp.";
 
-    private CommunicationManager commManager;
-    private FrameManager frameManager;
+    private ModuleManager moduleManager;
     private NsdManager nsdManager;
     private NsdManager.RegistrationListener registrationListener;
+    private AcceptClientTask acceptClientTask;
 
-    private AcceptSocketTask acceptSocketTask;
+    public P2PManager(Context context) {
+        moduleManager = new ModuleManager();
 
-    public P2PManager(Context context, CommunicationManager commManager, FrameManager frameManager) {
-        this.commManager = commManager;
-        this.frameManager = frameManager;
+
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         registrationListener = new NsdManager.RegistrationListener() {
             @Override
@@ -49,12 +47,14 @@ public class P2PManager {
     }
 
     public void onDestroy() {
-        acceptSocketTask.cancel(true);
+        acceptClientTask.onDestroy();
+        moduleManager.onDestroy();
         nsdManager.unregisterService(registrationListener);
     }
 
     public void registerService() throws IOException {
-        ServerSocket server = new ServerSocket(0);
+        acceptClientTask = new AcceptClientTask();
+        ServerSocket server = acceptClientTask.getServerSocket();
 
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
         serviceInfo.setServiceName(AppManager.getDeviceName());
@@ -63,33 +63,43 @@ public class P2PManager {
 
         nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener);
 
-        acceptSocketTask = new AcceptSocketTask(server);
-        acceptSocketTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new Thread(acceptClientTask).start();
     }
 
-    private class AcceptSocketTask extends AsyncTask<Void, Void, Void> {
-        private ServerSocket serverSocket;
+    private class AcceptClientTask implements Runnable {
+        private volatile boolean running;
+        private volatile ServerSocket serverSocket;
 
-        public AcceptSocketTask(ServerSocket serverSocket) {
-            this.serverSocket = serverSocket;
+        public AcceptClientTask() throws IOException {
+            running = false;
+            serverSocket = new ServerSocket(0);
+        }
+
+        public ServerSocket getServerSocket() {
+            return serverSocket;
+        }
+
+        public void onDestroy() {
+            running = false;
+
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
             try {
-                //noinspection InfiniteLoopStatement
-                while(true) {
-                    Log.d("status", "accepting socket");
-                    Socket socket = serverSocket.accept();
-
-                    frameManager.addSocket(socket);
-
-                    //commManager.addSocket(socket);
+                running = true;
+                while(running) {
+                    Log.d("status", "accepting connections");
+                    moduleManager.addSocket(serverSocket.accept());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return null;
         }
     }
 }

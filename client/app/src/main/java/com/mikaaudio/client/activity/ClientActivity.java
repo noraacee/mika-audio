@@ -2,7 +2,9 @@ package com.mikaaudio.client.activity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -11,31 +13,37 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mikaaudio.client.R;
-import com.mikaaudio.client.interf.OnConnectListener;
-import com.mikaaudio.client.interf.OnDisconnectListener;
-import com.mikaaudio.client.util.CommunicationManager;
-import com.mikaaudio.client.util.P2PManager;
-import com.mikaaudio.client.util.StatusManager;
+import com.mikaaudio.client.interf.OnDispatchKeyEventListener;
+import com.mikaaudio.client.interf.UICallbackListener;
+import com.mikaaudio.client.manager.ModuleManager;
+import com.mikaaudio.client.manager.P2PManager;
+import com.mikaaudio.client.manager.StatusManager;
+import com.mikaaudio.client.module.InputModule;
 import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
 
-public class ClientActivity extends Activity {
+
+public class ClientActivity extends Activity implements UICallbackListener {
     private boolean sendViewShown;
 
     private Button apps;
     private Button back;
     private Button click;
     private Button down;
+    private Button frame;
     private Button home;
+    private Button input;
     private Button keyboard;
     private Button left;
     private Button right;
     private Button send;
     private Button string;
+    private Button toggle;
     private Button up;
     private EditText sendView;
+    private ImageView display;
     private InterceptKeyEventLinearLayout contentView;
 
-    private CommunicationManager commManager;
+    private ModuleManager moduleManager;
     private InputMethodManager inputMethodManager;
     private P2PManager p2pManager;
 
@@ -48,12 +56,12 @@ public class ClientActivity extends Activity {
 
         StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
 
-        /*contentView = (InterceptKeyEventLinearLayout) findViewById(R.id.content_view);
+        contentView = (InterceptKeyEventLinearLayout) findViewById(R.id.content_view);
         contentView.setOnDispatchKeyEventListener(new OnDispatchKeyEventListener() {
             @Override
             public boolean onDispatchKeyEvent(KeyEvent keyEvent) {
                 if (!sendViewShown && keyEvent.getAction() == KeyEvent.ACTION_UP) {
-                    commManager.write(keyEvent.getKeyCode());
+                    moduleManager.getInputModule().sendInput(keyEvent.getKeyCode());
                     return true;
                 }
 
@@ -64,24 +72,24 @@ public class ClientActivity extends Activity {
         click = (Button) findViewById(R.id.click);
         click.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_CLICK);
+        public void onClick(View v) {
+                moduleManager.getInputModule().sendInput(InputModule.KEY_CLICK);
             }
         });
 
         back = (Button) findViewById(R.id.back);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_BACK);
+        public void onClick(View v) {
+                moduleManager.getInputModule().sendInput(InputModule.KEY_BACK);
             }
         });
 
         home = (Button) findViewById(R.id.home);
         home.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_HOME);
+        public void onClick(View v) {
+                moduleManager.getInputModule().sendInput(InputModule.KEY_HOME);
             }
         });
 
@@ -89,7 +97,7 @@ public class ClientActivity extends Activity {
         apps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_APPS);
+                moduleManager.getInputModule().sendInput(InputModule.KEY_APPS);
             }
         });
 
@@ -97,7 +105,7 @@ public class ClientActivity extends Activity {
         up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_UP);
+                moduleManager.getInputModule().sendInput(InputModule.KEY_UP);
             }
         });
 
@@ -105,7 +113,7 @@ public class ClientActivity extends Activity {
         down.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_DOWN);
+                moduleManager.getInputModule().sendInput(InputModule.KEY_DOWN);
             }
         });
 
@@ -113,7 +121,7 @@ public class ClientActivity extends Activity {
         left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_LEFT);
+                moduleManager.getInputModule().sendInput(InputModule.KEY_LEFT);
             }
         });
 
@@ -121,7 +129,7 @@ public class ClientActivity extends Activity {
         right.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                commManager.write(CommunicationManager.KEY_RIGHT);
+                moduleManager.getInputModule().sendInput(InputModule.KEY_RIGHT);
             }
         });
 
@@ -166,50 +174,42 @@ public class ClientActivity extends Activity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                commManager.write(sendView.getText().toString());
+                moduleManager.getInputModule().sendInput(sendView.getText().toString());
                 sendView.setText("");
             }
-        });*/
+        });
 
-        //setEnabled(false);
+        toggle = (Button) findViewById(R.id.toggle);
+        toggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moduleManager.getFrameModule().start();
+            }
+        });
+
+        input = (Button) findViewById(R.id.input);
+        input.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moduleManager.switchModule(ModuleManager.MODULE_INPUT);
+            }
+        });
+
+        frame = (Button) findViewById(R.id.frame);
+        frame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moduleManager.switchModule(ModuleManager.MODULE_FRAME);
+            }
+        });
+
+        display = (ImageView) findViewById(R.id.display);
 
         inputMethodManager = (InputMethodManager) ClientActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        Button toggled = (Button) findViewById(R.id.toggle);
-        toggled.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                commManager.toggleDisplay();
-            }
-        });
+        moduleManager = new ModuleManager(this);
 
-        commManager = new CommunicationManager(new OnDisconnectListener() {
-            @Override
-            public void onDisconnect() {
-                StatusManager.getInstance().setStatus("disconnected");
-
-                //setEnabled(false);
-
-                p2pManager.connect();
-            }
-        });
-
-        commManager.setFrameView((ImageView) findViewById(R.id.frame));
-
-        p2pManager = new P2PManager(this, commManager, new OnConnectListener() {
-            @Override
-            public void onConnect() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        StatusManager.getInstance().setStatus("connected");
-
-                        //setEnabled(true);
-                    }
-                });
-            }
-        });
-
+        p2pManager = new P2PManager(this, moduleManager);
         p2pManager.connect();
     }
 
@@ -217,7 +217,7 @@ public class ClientActivity extends Activity {
     protected void onPause() {
         super.onPause();
         p2pManager.onDestroy();
-        commManager.onDestroy();
+        moduleManager.onDestroy();
     }
 
     private void setEnabled(boolean enabled) {
@@ -233,5 +233,37 @@ public class ClientActivity extends Activity {
         string.setEnabled(enabled);
         sendView.setEnabled(enabled);
         send.setEnabled(enabled);
+    }
+
+    @Override
+    public void onConnect() {
+        input.setEnabled(true);
+        frame.setEnabled(true);
+    }
+
+    @Override
+    public void onDisconnect() {
+        input.setEnabled(false);
+        frame.setEnabled(false);
+
+        setEnabled(false);
+    }
+
+    @Override
+    public void onFrame(Bitmap frame) {
+        display.setImageBitmap(frame);
+    }
+
+    @Override
+    public void onModuleChanged(int module) {
+        if (module == ModuleManager.MODULE_INPUT) {
+            input.setEnabled(false);
+            toggle.setEnabled(false);
+            setEnabled(true);
+        } else if (module == ModuleManager.MODULE_FRAME) {
+            frame.setEnabled(false);
+            toggle.setEnabled(true);
+            setEnabled(false);
+        }
     }
 }

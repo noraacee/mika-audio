@@ -1,4 +1,4 @@
-package com.mikaaudio.client.util;
+package com.mikaaudio.client.manager;
 
 import android.widget.TextView;
 
