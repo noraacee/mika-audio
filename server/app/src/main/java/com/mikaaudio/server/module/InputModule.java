@@ -27,19 +27,19 @@ public class InputModule {
         inputThread = new InputThread();
     }
 
-    public static void inputKeyEvent(int key) {
+    public void inputKeyEvent(int key) {
         synchronized (inputThread) {
             inputThread.inputKeyEvent(key);
         }
     }
 
-    public static void inputString(String text) {
+    public void inputString(String text) {
         synchronized (inputThread) {
             inputThread.inputString(text);
         }
     }
 
-    public static void listen(InputStream in, OutputStream out) {
+    public void listen(InputStream in, OutputStream out) {
         byte[] buffer = new byte[Stream.LENGTH_BUFFER];
         ByteArrayOutputStream inString = new ByteArrayOutputStream();
 

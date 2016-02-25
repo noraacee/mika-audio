@@ -21,7 +21,7 @@ public class FrameModule {
 
     private static long instance;
 
-    public static void stop() {
+    public void stop() {
         if (connected) {
             Log.d("status", "stopping");
             stop(instance);
@@ -32,11 +32,11 @@ public class FrameModule {
         }
     }
 
-    public static void onDestroy() {
+    public void onDestroy() {
         stop();
     }
 
-    public static void start(InputStream in, OutputStream out, String ip) {
+    public void start(InputStream in, OutputStream out, String ip) {
         try {
             if (!connected) {
                 out.write(ModuleManager.ACK);
@@ -57,7 +57,7 @@ public class FrameModule {
         }
     }
 
-    private static boolean init(InputStream in, String ip) throws IOException {
+    private boolean init(InputStream in, String ip) throws IOException {
         Log.d("status", "initializing");
 
         Log.d("status", "ip: " + ip);
@@ -76,14 +76,14 @@ public class FrameModule {
         return instance != -1;
     }
 
-    private static void pollStop(InputStream in) throws IOException {
+    private void pollStop(InputStream in) throws IOException {
         if (in.read() != ModuleManager.ACK)
             pollStop(in);
         else
             stop();
     }
 
-    private static void start(InputStream in) throws IOException {
+    private void start(InputStream in) throws IOException {
         if (in.read() == ModuleManager.ACK) {
             new Thread(new FrameTask(instance)).start();
             Log.d("status", "started");

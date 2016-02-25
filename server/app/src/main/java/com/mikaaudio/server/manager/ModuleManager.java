@@ -21,13 +21,15 @@ public class ModuleManager {
     private static final int MODULE_INPUT = 0x01;
     private static final int MODULE_FRAME = 0x02;
 
-    private static final int SOCKET_TIMEOUT = 60000;
+    private static final int SOCKET_TIMEOUT = 3600000;
 
+    private FrameModule frameModule;
     private IrModule irModule;
     private List<Connection> connections;
 
     public ModuleManager() {
-        irModule = new IrModule();
+        frameModule = new FrameModule();
+        irModule = new IrModule(new InputModule());
         connections = new ArrayList<>();
     }
 
@@ -47,7 +49,7 @@ public class ModuleManager {
     }
 
     public void onDestroy() {
-        FrameModule.onDestroy();
+        frameModule.onDestroy();
         irModule.onDestroy();
 
         for (Connection c : connections)
@@ -57,6 +59,7 @@ public class ModuleManager {
     private class CommunicationTask implements Runnable {
         private volatile boolean running;
         private Connection connection;
+        private InputModule inputModule;
 
         public CommunicationTask(Connection connection) {
             this.connection = connection;
@@ -78,6 +81,8 @@ public class ModuleManager {
                 InputStream in = connection.getConnection().getInputStream();
                 OutputStream out = connection.getConnection().getOutputStream();
 
+                inputModule = new InputModule();
+
                 running = true;
                 int module;
                 Log.d("status", "listening");
@@ -90,12 +95,12 @@ public class ModuleManager {
                             break communication;
                         case MODULE_INPUT:
                             Log.d("status", "module input");
-                            InputModule.listen(in, out);
+                            inputModule.listen(in, out);
                             Log.d("status", "input stopped");
                             break;
                         case MODULE_FRAME:
                             Log.d("status", "module frame");
-                            FrameModule.start(in, out, connection.getConnection().getInetAddress().getHostAddress());
+                            frameModule.start(in, out, connection.getConnection().getInetAddress().getHostAddress());
                             break;
                     }
                 }
