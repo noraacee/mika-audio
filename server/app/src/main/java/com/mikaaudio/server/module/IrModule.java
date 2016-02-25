@@ -41,10 +41,10 @@ public class IrModule {
 
     private IrParser irParser;
 
-    public IrModule(InputModule inputModule) {
+    public IrModule() {
         try {
             BufferedInputStream iStream = new BufferedInputStream(new FileInputStream("/dev/input/event0"));
-            irParser = new IrParser(iStream, inputModule);
+            irParser = new IrParser(iStream);
             new Thread(irParser).start();
         } catch (IOException e) {
             Log.d("IrCommunicationManager", "Failed to open IR device");
@@ -60,11 +60,9 @@ public class IrModule {
         private volatile boolean running;
 
         private BufferedInputStream iStream;
-        private InputModule inputModule;
 
-        public IrParser(BufferedInputStream iStream, InputModule inputModule) {
+        public IrParser(BufferedInputStream iStream) {
             this.iStream = iStream;
-            this.inputModule = inputModule;
             running = false;
         }
 
@@ -110,7 +108,7 @@ public class IrModule {
                         // TODO: Confer with Aaron(aka twatface) about why it's so fucking slow
                         Integer key = KEY_PROTOCOLS.get(value);
                         if (key != null) {
-                            inputModule.inputKeyEvent(key);
+                            InputModule.inputKeyEvent(key);
                         }
                     }
                 }

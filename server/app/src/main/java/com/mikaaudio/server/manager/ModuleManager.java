@@ -27,7 +27,7 @@ public class ModuleManager {
     private List<Connection> connections;
 
     public ModuleManager() {
-        irModule = new IrModule(new InputModule());
+        irModule = new IrModule();
         connections = new ArrayList<>();
     }
 
@@ -57,7 +57,6 @@ public class ModuleManager {
     private class CommunicationTask implements Runnable {
         private volatile boolean running;
         private Connection connection;
-        private InputModule inputModule;
 
         public CommunicationTask(Connection connection) {
             this.connection = connection;
@@ -79,8 +78,6 @@ public class ModuleManager {
                 InputStream in = connection.getConnection().getInputStream();
                 OutputStream out = connection.getConnection().getOutputStream();
 
-                inputModule = new InputModule();
-
                 running = true;
                 int module;
                 Log.d("status", "listening");
@@ -93,7 +90,7 @@ public class ModuleManager {
                             break communication;
                         case MODULE_INPUT:
                             Log.d("status", "module input");
-                            inputModule.listen(in, out);
+                            InputModule.listen(in, out);
                             Log.d("status", "input stopped");
                             break;
                         case MODULE_FRAME:
