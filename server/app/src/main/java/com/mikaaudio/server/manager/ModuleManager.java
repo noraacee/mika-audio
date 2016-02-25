@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.mikaaudio.server.module.FrameModule;
 import com.mikaaudio.server.module.InputModule;
+import com.mikaaudio.server.module.IrModule;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,11 +23,11 @@ public class ModuleManager {
 
     private static final int SOCKET_TIMEOUT = 60000;
 
-    private volatile FrameModule frameModule;
+    private IrModule irModule;
     private List<Connection> connections;
 
     public ModuleManager() {
-        frameModule = new FrameModule();
+        irModule = new IrModule(new InputModule());
         connections = new ArrayList<>();
     }
 
@@ -46,7 +47,8 @@ public class ModuleManager {
     }
 
     public void onDestroy() {
-        frameModule.onDestroy();
+        FrameModule.onDestroy();
+        irModule.onDestroy();
 
         for (Connection c : connections)
             c.onDestroy();
@@ -54,7 +56,7 @@ public class ModuleManager {
 
     private class CommunicationTask implements Runnable {
         private volatile boolean running;
-        private volatile Connection connection;
+        private Connection connection;
         private InputModule inputModule;
 
         public CommunicationTask(Connection connection) {
@@ -77,7 +79,7 @@ public class ModuleManager {
                 InputStream in = connection.getConnection().getInputStream();
                 OutputStream out = connection.getConnection().getOutputStream();
 
-                inputModule = new InputModule(in, out);
+                inputModule = new InputModule();
 
                 running = true;
                 int module;
@@ -91,11 +93,12 @@ public class ModuleManager {
                             break communication;
                         case MODULE_INPUT:
                             Log.d("status", "module input");
-                            inputModule.listen();
+                            inputModule.listen(in, out);
+                            Log.d("status", "input stopped");
                             break;
                         case MODULE_FRAME:
                             Log.d("status", "module frame");
-                            frameModule.start(in, out);
+                            FrameModule.start(in, out, connection.getConnection().getInetAddress().getHostAddress());
                             break;
                     }
                 }

@@ -23,6 +23,7 @@ import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
 
 
 public class ClientActivity extends Activity implements UICallbackListener {
+    private boolean connected;
     private boolean sendViewShown;
 
     private Button apps;
@@ -52,6 +53,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
 
+        connected = false;
         sendViewShown = false;
 
         StatusManager.getInstance().setStatusView((TextView) findViewById(R.id.status));
@@ -220,6 +222,13 @@ public class ClientActivity extends Activity implements UICallbackListener {
         moduleManager.onDestroy();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!connected)
+            p2pManager.connect();
+    }
+
     private void setEnabled(boolean enabled) {
         click.setEnabled(enabled);
         back.setEnabled(enabled);
@@ -239,6 +248,8 @@ public class ClientActivity extends Activity implements UICallbackListener {
     public void onConnect() {
         input.setEnabled(true);
         frame.setEnabled(true);
+
+        connected = true;
     }
 
     @Override
@@ -247,6 +258,8 @@ public class ClientActivity extends Activity implements UICallbackListener {
         frame.setEnabled(false);
 
         setEnabled(false);
+
+        connected = false;
     }
 
     @Override

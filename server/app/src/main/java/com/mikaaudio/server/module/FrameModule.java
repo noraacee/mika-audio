@@ -12,43 +12,41 @@ import java.io.OutputStream;
 public class FrameModule {
     private static final String LIB_FRAME = "mikaframe";
 
-    private boolean connected;
+    private static volatile boolean connected;
 
-    private long instance;
-
-    private InputStream in;
-
-    public FrameModule() {
+    static {
         connected = false;
         System.loadLibrary(LIB_FRAME);
     }
 
-    public void stop() throws IOException {
+    private static long instance;
+
+    public static void stop() {
         if (connected) {
+            Log.d("status", "stopping");
             stop(instance);
             destroy(instance);
             connected = false;
             instance = -1;
-            in = null;
+            Log.d("status", "stopped");
         }
     }
 
-    public void onDestroy() {
-        destroy(instance);
+    public static void onDestroy() {
+        stop();
     }
 
-    public void start(InputStream in, OutputStream out) {
+    public static void start(InputStream in, OutputStream out, String ip) {
         try {
             if (!connected) {
-                Log.d("status", "socket accepted");
-                this.in = in;
-
                 out.write(ModuleManager.ACK);
 
-                if (init()) {
+                if (init(in, ip)) {
+                    Log.d("status", "initiailized");
                     out.write(ModuleManager.ACK);
-                    start();
+                    start(in);
                 } else {
+                    Log.d("status", "failed to initialize");
                     out.write(ModuleManager.REJECT);
                 }
             } else {
@@ -59,39 +57,48 @@ public class FrameModule {
         }
     }
 
-    private boolean init() throws IOException {
-        String ip = Stream.readString(in);
+    private static boolean init(InputStream in, String ip) throws IOException {
+        Log.d("status", "initializing");
+
+        Log.d("status", "ip: " + ip);
+
         int port = Stream.readInt(in);
+        Log.d("status", "port: " + port);
+
         int width = Stream.readInt(in);
+        Log.d("status", "width: " + width);
+
         int height = Stream.readInt(in);
+        Log.d("status", "height: " + height);
 
         instance = init(ip, port, width, height);
 
         return instance != -1;
     }
 
-    private void pollStop() throws IOException {
+    private static void pollStop(InputStream in) throws IOException {
         if (in.read() != ModuleManager.ACK)
-            pollStop();
+            pollStop(in);
         else
             stop();
     }
 
-    private void start() throws IOException {
+    private static void start(InputStream in) throws IOException {
         if (in.read() == ModuleManager.ACK) {
             new Thread(new FrameTask(instance)).start();
-            pollStop();
+            Log.d("status", "started");
+            pollStop(in);
         } else {
-            start();
+            start(in);
         }
     }
 
-    private native long destroy(long screenPtr);
-    private native long init(String ip, int port, int width, int height);
-    private native void start(long screenPtr);
-    private native void stop(long screenPtr);
+    private static native long destroy(long screenPtr);
+    private static native long init(String ip, int port, int width, int height);
+    private static native void start(long screenPtr);
+    private static native void stop(long screenPtr);
 
-    private class FrameTask implements Runnable {
+    private static class FrameTask implements Runnable {
         private long screenPtr;
 
         public FrameTask(long screenPtr) {

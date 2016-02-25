@@ -155,7 +155,7 @@ E:/Development/Capstone/mika-audio/server/app/src/main/obj/local/armeabi-v7a/obj
  include/gui/IGraphicBufferConsumer.h \
  include/gui/IGraphicBufferProducer.h include/gui/IConsumerListener.h \
  include/gui/SurfaceControl.h include/utils/KeyedVector.h \
- include/ui/Region.h \
+ include/ui/Region.h include/private/gui/ComposerService.h \
  C:/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/string \
  C:/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stl/_string.h \
  C:/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stl/_alloc.h \
@@ -604,6 +604,8 @@ include/gui/SurfaceControl.h:
 include/utils/KeyedVector.h:
 
 include/ui/Region.h:
+
+include/private/gui/ComposerService.h:
 
 C:/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/string:
 

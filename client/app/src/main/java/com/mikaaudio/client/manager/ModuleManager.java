@@ -30,6 +30,10 @@ public class ModuleManager {
 
     private static final int SOCKET_TIMEOUT = 5000;
 
+    private static final String TAG = "module";
+
+    private boolean connected;
+
     private int currModule;
 
     private volatile FrameModule frameModule;
@@ -48,6 +52,7 @@ public class ModuleManager {
 
         uiHandler = new Handler(Looper.getMainLooper(), initUICallback());
 
+        connected = false;
         currModule = MODULE_EXIT;
     }
 
@@ -65,13 +70,17 @@ public class ModuleManager {
 
 
     public void onDestroy() {
-        frameModule.onDestroy();
-        inputModule.onDestroy();
+        if (connected) {
+            frameModule.onDestroy();
+            inputModule.onDestroy();
 
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            connected = false;
         }
     }
 
@@ -89,7 +98,7 @@ public class ModuleManager {
         InputStream in = socket.getInputStream();
         OutputStream out = socket.getOutputStream();
 
-        moduleThread = new ModuleThread(in, out, uiHandler);
+        moduleThread = new ModuleThread(in, out);
 
         inputModule = new InputModule(out);
         frameModule = new FrameModule(in, out, new Handler(Looper.getMainLooper(), new Handler.Callback() {
@@ -101,6 +110,8 @@ public class ModuleManager {
         }));
 
         uiHandler.obtainMessage(HANDLER_CONNECTED).sendToTarget();
+
+        connected = true;
     }
 
     private Handler.Callback initUICallback() {
@@ -120,6 +131,7 @@ public class ModuleManager {
                         switch(msg.arg1) {
                             case MODULE_EXIT:
                                 Log.d("status", "module exit");
+                                connected = false;
                                 currModule = MODULE_EXIT;
                                 uiCallbackListener.onDisconnect();
                                 break;
@@ -141,21 +153,17 @@ public class ModuleManager {
     }
 
     private class ModuleThread extends HandlerThread {
-        private static final String NAME_MODULE = "module";
-
         private int currModule;
 
         private InputStream in;
         private OutputStream out;
 
         private Handler moduleHandler;
-        private Handler uiHandler;
 
-        public ModuleThread(InputStream in, OutputStream out, Handler uiHandler) {
-            super(NAME_MODULE);
+        public ModuleThread(InputStream in, OutputStream out) {
+            super(TAG);
             this.in = in;
             this.out = out;
-            this.uiHandler = uiHandler;
             currModule = MODULE_EXIT;
 
             start();
@@ -198,10 +206,11 @@ public class ModuleManager {
                                         if (in.read() != ACK)
                                             break;
                                     case MODULE_EXIT:
+                                        Log.d("status", "connecting to frame");
                                         out.write(MODULE_FRAME);
                                         if (in.read() != ACK)
                                             break;
-                                        if (frameModule.init())
+                                        if (frameModule.init(socket.getLocalAddress().getHostAddress()))
                                             uiHandler.obtainMessage(HANDLER_MODULE, MODULE_FRAME, 0).sendToTarget();
                                 }
                                 break;

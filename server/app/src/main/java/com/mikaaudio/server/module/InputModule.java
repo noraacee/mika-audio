@@ -1,6 +1,9 @@
 package com.mikaaudio.server.module;
 
 import android.app.Instrumentation;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.util.Log;
 
 import com.mikaaudio.server.manager.ModuleManager;
@@ -16,34 +19,30 @@ public class InputModule {
     private static final int MODE_KEY = 0x01;
     private static final int MODE_TEXT = 0x02;
 
-    private byte[] buffer;
+    private static final String TAG = "input";
 
-    private ByteArrayOutputStream inString;
-    private InputStream in;
-    private Instrumentation inputDispatcher;
-    private OutputStream out;
+    private static final InputThread inputThread;
 
-    public InputModule(InputStream in, OutputStream out) {
-        this.in = in;
-        this.out = out;
-
-        buffer = new byte[Stream.LENGTH_BUFFER];
-        inString = new ByteArrayOutputStream();
-
-        inputDispatcher = new Instrumentation();
+    static {
+        inputThread = new InputThread();
     }
 
     public void inputKeyEvent(int key) {
-        Log.d("status", "received key: " + key);
-        inputDispatcher.sendKeyDownUpSync(key);
+        synchronized (inputThread) {
+            inputThread.inputKeyEvent(key);
+        }
     }
 
     public void inputString(String text) {
-        Log.d("status", "received key: " + text);
-        inputDispatcher.sendStringSync(text);
+        synchronized (inputThread) {
+            inputThread.inputString(text);
+        }
     }
 
-    public void listen() {
+    public void listen(InputStream in, OutputStream out) {
+        byte[] buffer = new byte[Stream.LENGTH_BUFFER];
+        ByteArrayOutputStream inString = new ByteArrayOutputStream();
+
         try {
             out.write(ModuleManager.ACK);
             Log.d("status", "receiving input");
@@ -66,6 +65,47 @@ public class InputModule {
             out.write(ModuleManager.ACK);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static class InputThread extends HandlerThread {
+        private Handler inputHandler;
+        private Instrumentation inputDispatcher;
+
+        public InputThread() {
+            super(TAG);
+            inputDispatcher = new Instrumentation();
+
+            start();
+
+            inputHandler = new Handler(getLooper(), initCallback());
+        }
+
+        public void inputKeyEvent(int key) {
+            inputHandler.obtainMessage(MODE_KEY, key, 0).sendToTarget();
+        }
+
+        public void inputString(String text) {
+            inputHandler.obtainMessage(MODE_TEXT, text).sendToTarget();
+        }
+
+        private Handler.Callback initCallback() {
+            return new Handler.Callback() {
+                @Override
+                public boolean handleMessage(Message msg) {
+                    switch (msg.what) {
+                        case MODE_KEY:
+                            Log.d("status", "received key: " + msg.arg1);
+                            inputDispatcher.sendKeyDownUpSync(msg.arg1);
+                            break;
+                        case MODE_TEXT:
+                            Log.d("status", "received key: " + msg.obj);
+                            inputDispatcher.sendStringSync((String) msg.obj);
+                            break;
+                    }
+                    return true;
+                }
+            };
         }
     }
 }

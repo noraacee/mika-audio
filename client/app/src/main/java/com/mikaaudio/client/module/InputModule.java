@@ -24,6 +24,7 @@ public class InputModule {
     private static final int MODE_TEXT = 0x02;
 
     private static final String CHARSET_UTF_8 = "UTF-8";
+    private static final String TAG = "input";
 
     private InputThread inputThread;
 
@@ -48,14 +49,13 @@ public class InputModule {
         inputThread.sendInput(text);
     }
 
-    private class InputThread extends HandlerThread {
-        private static final String NAME_THREAD = "input";
+    private static class InputThread extends HandlerThread {
 
         private Handler inputHandler;
         private OutputStream out;
 
         public InputThread(OutputStream out) {
-            super(NAME_THREAD);
+            super(TAG);
             this.out = out;
 
             start();

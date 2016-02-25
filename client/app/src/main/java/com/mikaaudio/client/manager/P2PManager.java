@@ -22,12 +22,12 @@ public class P2PManager {
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
 
         discovering = false;
-        discoveryListener = initDiscoveryListener();
     }
 
     public void connect() {
         if (!discovering) {
             discovering = true;
+            discoveryListener = initDiscoveryListener();
             nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
         }
     }
@@ -101,6 +101,8 @@ public class P2PManager {
 
                     Log.d("status", "connected socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
                 } catch (IOException e) {
+                    onDestroy();
+                    connect();
                     e.printStackTrace();
                 }
             }

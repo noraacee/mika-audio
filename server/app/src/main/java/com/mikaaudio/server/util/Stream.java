@@ -9,17 +9,6 @@ import java.io.InputStream;
 public class Stream {
     public static final int LENGTH_BUFFER = 1024;
 
-    public static String readString(InputStream in) throws IOException {
-        byte[] buffer = new byte[LENGTH_BUFFER];
-        ByteArrayOutputStream inString = new ByteArrayOutputStream();
-
-        int length;
-        while((length = in.read(buffer)) != -1)
-            inString.write(buffer, 0, length);
-
-        return inString.toString(AppManager.getCharset());
-    }
-
     public static String readString(InputStream in, ByteArrayOutputStream inString, byte[] buffer) throws IOException {
         int length;
         while((length = in.read(buffer)) != -1)
@@ -35,6 +24,6 @@ public class Stream {
         b3 = in.read();
         b4 = in.read();
 
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
+        return b1 << 24 | (b2 & 0xFF) << 16 | (b3 & 0xFF) << 8 | (b4 & 0xFF);
     }
 }
