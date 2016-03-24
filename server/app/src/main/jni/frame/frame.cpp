@@ -6,13 +6,13 @@ extern "C" void Java_com_mikaaudio_server_module_FrameModule_destroy(JNIEnv *env
     delete screen;
 }
 
-extern "C" jlong Java_com_mikaaudio_server_module_FrameModule_init (JNIEnv *env, jobject object, jstring jip, uint32_t port, uint32_t w, uint32_t h) {
+extern "C" jlong Java_com_mikaaudio_server_module_FrameModule_init (JNIEnv *env, jobject object, jstring jip, uint32_t port) {
     char* ip;
     const char * _ip = env->GetStringUTFChars(jip, 0);
     ip = strdup(_ip);
     env->ReleaseStringUTFChars(jip, _ip);
 
-    android::Screen* screen = new android::Screen(ip, port, w, h);
+    android::Screen* screen = new android::Screen(ip, port);
     int err = screen->initCheck();
 
     if (err != 0)

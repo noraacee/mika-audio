@@ -1,11 +1,10 @@
 package com.mikaaudio.client.module;
 
-import android.graphics.Bitmap;
-import android.os.Handler;
 import android.util.Log;
 
 import com.mikaaudio.client.manager.ModuleManager;
 import com.mikaaudio.client.util.Stream;
+import com.mikaaudio.client.widget.FrameView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,51 +12,62 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 
 public class FrameModule {
-    private static final int SIZE_HEADER = 4;
-    private static final int SIZE_PACKET = 65507;
-    private static final int SIZE_PIXEL = 4;
+    private static final int SIZE_PIXEL = 2;
+    private static final int SIZE_PACKET = 1500;
+    private static final int SIZE_IP_HEADER = 20;
+    private static final int SIZE_UDP_HEADER = 8;
+    private static final int SIZE_FRAME_HEADER = 4;
+    private static final int SIZE_DATA = SIZE_PACKET - SIZE_IP_HEADER - SIZE_UDP_HEADER - SIZE_FRAME_HEADER;
 
-    private static final int HEIGHT = 720;
-    private static final int WIDTH = 480;
-    private static final int PIXELS = WIDTH * HEIGHT;
-    private static final int PIXELS_BYTES = PIXELS * SIZE_PIXEL;
+    private static final String TAG = "FRAME";
 
     private boolean running;
 
+    private DatagramPacket packet;
     private DatagramSocket connection;
     private InputStream in;
     private OutputStream out;
 
-    private Handler frameHandler;
     private FrameTask frameTask;
+    private FrameView frameView;
 
-    public FrameModule(InputStream in, OutputStream out, Handler frameHandler) {
+    public FrameModule(InputStream in, OutputStream out, FrameView frameView) {
         this.in = in;
         this.out = out;
-        this.frameHandler = frameHandler;
+        this.frameView = frameView;
 
         running = false;
     }
 
     public boolean init(String ip) {
         try {
-            Log.d("status", "initializing frame");
+            Log.d(TAG, "initializing frame");
 
-            Log.d("status", "socket created at ip: " + ip);
+            Log.d(TAG, "socket created at ip: " + ip);
             connection = new DatagramSocket(0, InetAddress.getByName(ip));
 
-            Log.d("status", "sending port: " + connection.getLocalPort());
+            packet = new DatagramPacket(new byte[SIZE_DATA + SIZE_FRAME_HEADER], SIZE_DATA + SIZE_FRAME_HEADER);
+
+            Log.d(TAG, "sending port: " + connection.getLocalPort());
             Stream.writeInt(out, connection.getLocalPort());
 
-            Log.d("status", "sending width: " + WIDTH);
-            Stream.writeInt(out, WIDTH);
+            Log.d(TAG, "done sending");
 
-            Log.d("status", "sending height: " + HEIGHT);
-            Stream.writeInt(out, HEIGHT);
+            connection.receive(packet);
+            int width = Stream.readInt(packet.getData());
+            int height = Stream.readInt(packet.getData(), 4);
+            frameView.setDimensions(width,height);
 
-            Log.d("status", "done sending");
+            Log.d(TAG, "dimensions: " + width + ", " + height);
+
+            int bufferSize = connection.getReceiveBufferSize();
+            Log.d(TAG, "receive buffer: " + bufferSize);
+
+            Stream.writeInt(packet.getData(), bufferSize);
+            connection.send(packet);
 
             return in.read() == ModuleManager.ACK;
         } catch (IOException e) {
@@ -74,6 +84,7 @@ public class FrameModule {
     public void stop() {
         try {
             out.write(ModuleManager.ACK);
+            frameView.stop();
             frameTask.stop();
             running = false;
         } catch (IOException e) {
@@ -85,9 +96,10 @@ public class FrameModule {
         if (running)
             return;
 
-        Log.d("status", "starting frame");
+        Log.d(TAG, "starting frame");
 
-        frameTask = new FrameTask(connection, frameHandler);
+        frameView.start();
+        frameTask = new FrameTask(connection, packet, frameView);
         new Thread(frameTask).start();
 
         try {
@@ -101,19 +113,24 @@ public class FrameModule {
     private static class FrameTask implements Runnable {
         private volatile boolean running;
 
-        private byte[] dataBuffer;
-        private int[] colorBuffer;
+        private byte[] data;
 
+        private int pixels;
+
+        private ByteBuffer frameBuffer;
+        private DatagramPacket packet;
         private DatagramSocket connection;
-        private Handler frameHandler;
+        private FrameView frameView;
 
-        public FrameTask(DatagramSocket connection, Handler frameHandler) {
+        public FrameTask(DatagramSocket connection, DatagramPacket packet, FrameView frameView) {
             this.connection = connection;
-            this.frameHandler = frameHandler;
+            this.packet = packet;
+            this.frameView = frameView;
 
             running = false;
-            dataBuffer = new byte[SIZE_PACKET];
-            colorBuffer = new int[PIXELS];
+            data = packet.getData();
+            pixels = frameView.getSize() * SIZE_PIXEL;
+            frameBuffer = frameView.getFrameBuffer();
         }
 
         public void stop() {
@@ -123,36 +140,27 @@ public class FrameModule {
         @Override
         public void run() {
             running = true;
-            Bitmap frame;
+            int done;
             while (running) {
                 try {
-                    frame = receiveFrame();
-                    frameHandler.obtainMessage(0, frame).sendToTarget();
+                    connection.receive(packet);
+
+                    int index = Stream.read(data, 1) * SIZE_PIXEL;
+
+                    frameBuffer.position(index);
+                    frameBuffer.put(data, SIZE_FRAME_HEADER, packet.getLength() - SIZE_FRAME_HEADER);
+
+                    done = Stream.readByte(data, 0);
+                    if (done == 1) {
+                        frameBuffer.limit(pixels);
+                        frameBuffer.rewind();
+                        frameView.ready();
+                        frameBuffer.clear();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-        }
-
-        private Bitmap receiveFrame() throws IOException {
-            DatagramPacket packet;
-
-            boolean done = false;
-            while (!done) {
-                packet = new DatagramPacket(dataBuffer, SIZE_PACKET);
-                connection.receive(packet);
-
-                byte[] data = packet.getData();
-                int index = Stream.readInt(data);
-
-                for (int i = 1; i < packet.getLength() / 4; i++)
-                    colorBuffer[index / SIZE_PIXEL + i - 1] = Stream.readInt(data, i * SIZE_PIXEL);
-
-                if (index + packet.getLength() - SIZE_HEADER >= PIXELS_BYTES)
-                    done = true;
-            }
-
-            return Bitmap.createBitmap(colorBuffer, WIDTH, HEIGHT, Bitmap.Config.RGB_565);
         }
     }
 }

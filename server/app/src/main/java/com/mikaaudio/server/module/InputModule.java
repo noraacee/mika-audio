@@ -19,7 +19,7 @@ public class InputModule {
     private static final int MODE_KEY = 0x01;
     private static final int MODE_TEXT = 0x02;
 
-    private static final String TAG = "input";
+    private static final String TAG = "INPUT";
 
     private static final InputThread inputThread;
 
@@ -45,13 +45,14 @@ public class InputModule {
 
         try {
             out.write(ModuleManager.ACK);
-            Log.d("status", "receiving input");
+            Log.d(TAG, "receiving input");
 
             int mode;
             listening: while (true) {
                 mode = in.read();
                 switch(mode) {
                     case MODE_EXIT:
+                        Log.d(TAG, "exiting");
                         break listening;
                     case MODE_KEY:
                         inputKeyEvent(in.read());
@@ -95,11 +96,11 @@ public class InputModule {
                 public boolean handleMessage(Message msg) {
                     switch (msg.what) {
                         case MODE_KEY:
-                            Log.d("status", "received key: " + msg.arg1);
+                            Log.d(TAG, "received key: " + msg.arg1);
                             inputDispatcher.sendKeyDownUpSync(msg.arg1);
                             break;
                         case MODE_TEXT:
-                            Log.d("status", "received key: " + msg.obj);
+                            Log.d(TAG, "received key: " + msg.obj);
                             inputDispatcher.sendStringSync((String) msg.obj);
                             break;
                     }

@@ -29,10 +29,10 @@
         android:layout_height="wrap_content"
         android:enabled="false"
         android:text="Start/Stop"/>
-    <ImageView
+    <com.mikaaudio.client.widget.FrameView
         android:id="@+id/display"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_width="480dp"
+        android:layout_height="720dp" />
     <Button
         android:id="@+id/click"
         android:layout_width="wrap_content"

@@ -23,6 +23,8 @@ public class ModuleManager {
 
     private static final int SOCKET_TIMEOUT = 3600000;
 
+    private static final String TAG = "MODULE";
+
     private FrameModule frameModule;
     private IrModule irModule;
     private List<Connection> connections;
@@ -34,7 +36,7 @@ public class ModuleManager {
     }
 
     public void addSocket(Socket socket) throws IOException {
-        Log.d("socket", "socket created at port " + socket.getLocalPort());
+        Log.d(TAG, "socket created at port " + socket.getLocalPort());
 
         Connection connection = new Connection();
 
@@ -85,21 +87,21 @@ public class ModuleManager {
 
                 running = true;
                 int module;
-                Log.d("status", "listening");
+                Log.d(TAG, "listening");
                 communication: while(running) {
                     module = in.read();
                     switch(module) {
                         case MODULE_EXIT:
-                            Log.d("status", "module exit");
+                            Log.d(TAG, "module exit");
                             out.write(ACK);
                             break communication;
                         case MODULE_INPUT:
-                            Log.d("status", "module input");
+                            Log.d(TAG, "module input");
                             inputModule.listen(in, out);
-                            Log.d("status", "input stopped");
+                            Log.d(TAG, "input stopped");
                             break;
                         case MODULE_FRAME:
-                            Log.d("status", "module frame");
+                            Log.d(TAG, "module frame");
                             frameModule.start(in, out, connection.getConnection().getInetAddress().getHostAddress());
                             break;
                     }
@@ -112,7 +114,7 @@ public class ModuleManager {
                 e.printStackTrace();
             }
 
-            Log.d("status", "socket at port " + connection.getConnection().getLocalPort() + " is disconnected");
+            Log.d(TAG, "socket at port " + connection.getConnection().getLocalPort() + " is disconnected");
 
             try {
                 connection.getConnection().close();

@@ -82,6 +82,7 @@ public class InputModule {
                     try {
                         switch (msg.what) {
                             case MODE_EXIT:
+                                Log.d("status", "exitting input module");
                                 out.write(MODE_EXIT);
                                 break;
                             case MODE_KEY:

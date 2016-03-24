@@ -2,14 +2,12 @@ package com.mikaaudio.client.activity;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mikaaudio.client.R;
@@ -19,6 +17,7 @@ import com.mikaaudio.client.manager.ModuleManager;
 import com.mikaaudio.client.manager.P2PManager;
 import com.mikaaudio.client.manager.StatusManager;
 import com.mikaaudio.client.module.InputModule;
+import com.mikaaudio.client.widget.FrameView;
 import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
 
 
@@ -41,7 +40,6 @@ public class ClientActivity extends Activity implements UICallbackListener {
     private Button toggle;
     private Button up;
     private EditText sendView;
-    private ImageView display;
     private InterceptKeyEventLinearLayout contentView;
 
     private ModuleManager moduleManager;
@@ -205,11 +203,11 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        display = (ImageView) findViewById(R.id.display);
+        FrameView display = (FrameView) findViewById(R.id.display);
 
         inputMethodManager = (InputMethodManager) ClientActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        moduleManager = new ModuleManager(this);
+        moduleManager = new ModuleManager(this, display);
 
         p2pManager = new P2PManager(this, moduleManager);
         p2pManager.connect();
@@ -260,11 +258,6 @@ public class ClientActivity extends Activity implements UICallbackListener {
         setEnabled(false);
 
         connected = false;
-    }
-
-    @Override
-    public void onFrame(Bitmap frame) {
-        display.setImageBitmap(frame);
     }
 
     @Override

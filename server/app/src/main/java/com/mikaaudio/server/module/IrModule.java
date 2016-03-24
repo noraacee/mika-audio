@@ -27,6 +27,8 @@ public class IrModule {
     private static final int IR_KEY_LEFT = 0x00010034;
     private static final int IR_KEY_HOME = 0x00010060;
 
+    private static final String TAG = "IR";
+
     private static final Map<Integer, Integer> KEY_PROTOCOLS;
 
     static {
@@ -47,7 +49,7 @@ public class IrModule {
             irParser = new IrParser(iStream, inputModule);
             new Thread(irParser).start();
         } catch (IOException e) {
-            Log.d("IrCommunicationManager", "Failed to open IR device");
+            Log.d(TAG, "Failed to open IR device");
         }
     }
 
@@ -98,7 +100,7 @@ public class IrModule {
                         prev_time_s = time_s;
                         prev_time_us = time_us;
 
-                        Log.d("IrCommunicationManager", "type: " + type
+                        Log.d(TAG, "type: " + type
                                 + " code: " + code
                                 + " value: " + String.format("%x", value)
                                 + " time_s: " + time_s

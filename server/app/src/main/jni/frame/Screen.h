@@ -1,5 +1,4 @@
 #ifndef SERVER_SCREEN_H
-#define SERVER_SCREEN_H
 
 #define APP_NAME "mikaaudio"
 
@@ -14,19 +13,29 @@
 
 #include <unistd.h>
 #include <string>
+#include <turbojpeg.h>
 
 const int SIZE_PIXEL = 4;
+const int SIZE_CONVERTED_PIXEL = 3;
+const int SIZE_PACKET_PIXEL = 2;
+
 const int SIZE_PACKET = 1500;
 const int SIZE_IP_HEADER = 20;
 const int SIZE_UDP_HEADER = 8;
-const int SIZE_FRAME_HEADER = 2;
+const int SIZE_FRAME_HEADER = 4;
+
 const int SIZE_DATA = SIZE_PACKET - SIZE_IP_HEADER - SIZE_UDP_HEADER - SIZE_FRAME_HEADER;
+
+const int HEIGHT = 1280;
+const int WIDTH = 720;
+const int PIXELS = WIDTH * HEIGHT;
+const int SIZE = PIXELS * SIZE_CONVERTED_PIXEL;
 
 namespace android {
     class Screen {
 
     public:
-        Screen(char* ip, uint32_t port, uint32_t w, uint32_t h);
+        Screen(char* ip, uint32_t port);
         ~Screen();
 
         int initCheck();
@@ -41,24 +50,22 @@ namespace android {
         struct sockaddr_in from;
         struct sockaddr_in to;
 
-        sp<ISurfaceComposer> composer;
-        mutable sp<CpuConsumer> cpuConsumer;
-        mutable sp<IGraphicBufferProducer> producer;
-        CpuConsumer::LockedBuffer buffer;
-        bool haveBuffer;
 
+        ScreenshotClient* client;
         sp<IBinder> display;
         Rect* sourceCrop;
-        uint32_t width, height, pixels, count, index, len, stride;
+        uint16_t r, g, b, rgb;
+        uint32_t count, index, len, stride, bufferSize;
+        char hi, lo;
         char* bitmap;
         char* convertedBitmap;
         char data[SIZE_FRAME_HEADER + SIZE_DATA];
 
-        void initDisplay(uint32_t w, uint32_t h);
-        void initSocket(char* ip, uint32_t port);
-        void copyData();
-        void sendFrame();
         void convertPixelFormat();
+        void initDisplay();
+        void initSocket(char* ip, uint32_t port);
+        void sendFrame();
+        void writeInt(uint32_t value, uint32_t offset);
     };
 }
 

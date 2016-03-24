@@ -1,6 +1,5 @@
 package com.mikaaudio.client.manager;
 
-import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -10,6 +9,7 @@ import android.util.Log;
 import com.mikaaudio.client.interf.UICallbackListener;
 import com.mikaaudio.client.module.FrameModule;
 import com.mikaaudio.client.module.InputModule;
+import com.mikaaudio.client.widget.FrameView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,14 +41,16 @@ public class ModuleManager {
 
     private UICallbackListener uiCallbackListener;
 
+    private FrameView frameView;
     private Handler uiHandler;
-    private Socket socket;
     private ModuleThread moduleThread;
+    private Socket socket;
 
-    public ModuleManager(UICallbackListener uiCallbackListener) {
+    public ModuleManager(UICallbackListener uiCallbackListener, FrameView frameView) {
         if (uiCallbackListener == null)
             throw new NullPointerException();
         this.uiCallbackListener = uiCallbackListener;
+        this.frameView = frameView;
 
         uiHandler = new Handler(Looper.getMainLooper(), initUICallback());
 
@@ -101,13 +103,7 @@ public class ModuleManager {
         moduleThread = new ModuleThread(in, out);
 
         inputModule = new InputModule(out);
-        frameModule = new FrameModule(in, out, new Handler(Looper.getMainLooper(), new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                uiCallbackListener.onFrame((Bitmap) msg.obj);
-                return true;
-            }
-        }));
+        frameModule = new FrameModule(in, out, frameView);
 
         uiHandler.obtainMessage(HANDLER_CONNECTED).sendToTarget();
 

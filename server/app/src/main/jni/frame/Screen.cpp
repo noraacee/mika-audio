@@ -1,11 +1,11 @@
 #include "Screen.h"
 
 namespace android {
-    Screen::Screen(char* ip, uint32_t port, uint32_t w, uint32_t h) {
+    Screen::Screen(char* ip, uint32_t port) {
         initSucceed = 0;
         initSocket(ip, port);
         if (initSucceed == 0)
-            initDisplay(w, h);
+            initDisplay();
     }
 
     Screen::~Screen() {
@@ -27,22 +27,34 @@ namespace android {
         running = false;
     }
 
-    void Screen::initDisplay(uint32_t w, uint32_t h) {
-        composer = ComposerService::getComposerService();
-        if (composer == NULL) {
-            initSucceed = 1;
-            return;
+    void Screen::convertPixelFormat() {
+        count = 0;
+        for (index = 0; index < SIZE; index += SIZE_CONVERTED_PIXEL) {
+            if (index % (WIDTH * SIZE_CONVERTED_PIXEL) == 0 && count != 0)
+                count += stride;
+
+            r = ((bitmap[count] >> 3) & 0x001f ) << 11;
+            g = ((bitmap[count + 1] >> 2) & 0x003f ) << 5;
+            b = (bitmap[count + 2] >> 3) & 0x001f;
+            rgb = (uint16_t) (r | g | b);
+
+            hi = rgb & 0xFF;
+            lo = rgb >> 8;
+
+            //if (convertedBitmap[index] == hi && convertedBitmap[index + 1] == lo) {
+                //convertedBitmap[index + 2] = 0x01;
+            //} else {
+                convertedBitmap[index] = hi;
+                convertedBitmap[index + 1] = lo;
+                //convertedBitmap[index + 2] = 0;
+            //}
+
+            count += SIZE_PIXEL;
         }
+    }
 
-        sp<IGraphicBufferConsumer> consumer;
-        BufferQueue::createBufferQueue(&producer, &consumer);
-        cpuConsumer = new CpuConsumer(consumer, 1, true);
-        cpuConsumer->setName(String8(APP_NAME));
-        cpuConsumer->setDefaultBufferSize(w * 4, h);
-        cpuConsumer->setDefaultBufferFormat(HAL_PIXEL_FORMAT_RGB_565);
-        memset(&buffer, 0, sizeof(buffer));
-        haveBuffer = false;
-
+    void Screen::initDisplay() {
+        client = new ScreenshotClient();
         display = SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain);
         if (display == NULL) {
             initSucceed = 1;
@@ -50,11 +62,19 @@ namespace android {
         }
 
         sourceCrop = new Rect();
-        width = w;
-        height = h;
-        pixels = width * height * SIZE_PIXEL;
 
-        convertedBitmap = new char[pixels];
+        convertedBitmap = new char[SIZE];
+        for (int i = 0; i < SIZE; i++)
+            convertedBitmap[i] = 0;
+
+        writeInt(WIDTH, 0);
+        writeInt(HEIGHT, 4);
+
+        sendto(sock, data, 8, 0, (struct sockaddr*) &to, sizeof(to));
+        recvfrom(sock, data, 4, 0, 0, 0);
+
+        bufferSize = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
+        __android_log_print(ANDROID_LOG_VERBOSE, APP_NAME, "buffer size: %u", bufferSize);
     }
 
     void Screen::initSocket(char* ip, uint32_t port) {
@@ -85,59 +105,59 @@ namespace android {
         }
     }
 
-    void Screen::copyData() {
-        if ((len + count) % (width * SIZE_PIXEL) == 0 && count + len != 0)
-            index += stride;
-
-        data[SIZE_FRAME_HEADER + len] = convertedBitmap[index + len];
-    }
-
     void Screen::sendFrame() {
-        if (haveBuffer) {
-            cpuConsumer->unlockBuffer(buffer);
-            haveBuffer = false;
-        }
-
-        status_t err = composer->captureScreen(display, producer, *sourceCrop, width, height, 0, -1UL, false, static_cast<ISurfaceComposer::Rotation>(ISurfaceComposer::eRotateNone));
-        if (err == NO_ERROR) {
-            cpuConsumer->lockNextBuffer(&buffer);
-            if (err == NO_ERROR)
-                haveBuffer = true;
-        }
-
+        status_t err = client->update(display, *sourceCrop, WIDTH, HEIGHT, false);
         if (err != NO_ERROR)
             return;
 
+        stride = (client->getStride() - WIDTH) * 4;
+        bitmap = (char*) client->getPixels();
+
+        convertPixelFormat();
+
         count = 0;
-        index = 0;
-        stride = buffer.stride;
-        bitmap = (char*) buffer.data;
+        while (count < PIXELS) {
+            //while (convertedBitmap[count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL + 2] == 0x01) {}
+                //count++;
 
-        __android_log_print(ANDROID_LOG_VERBOSE, APP_NAME, "pixel format: %d", buffer.format);
+            //if (count > PIXELS)
+                //break;
 
-        while (count < pixels) {
-            data[0] = (count >> 24) & 0xFF;
             data[1] = (count >> 16) & 0xFF;
             data[2] = (count >> 8) & 0xFF;
             data[3] = count & 0xFF;
 
-            if (count + SIZE_DATA > pixels) {
-                for (len = 0; len < pixels - count; len++)
-                    copyData();
-            } else {
-                for (len = 0; len < SIZE_DATA; len++)
-                    copyData();
+            if (count + SIZE_DATA / SIZE_PACKET_PIXEL > PIXELS)
+                len = PIXELS - count;
+            else
+                len = SIZE_DATA / SIZE_PACKET_PIXEL;
+
+            for (index = 0; index < len; index++) {
+                //if (convertedBitmap[count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL + 2] == 0x01)
+                    //break;
+                data[SIZE_FRAME_HEADER + index * SIZE_PACKET_PIXEL] = convertedBitmap[
+                        count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL];
+                data[SIZE_FRAME_HEADER + index * SIZE_PACKET_PIXEL + 1] = convertedBitmap[
+                        count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL + 1];
             }
 
-            count += len;
-            index += len;
+            count += index;
 
-            usleep(50);
+            if (count == PIXELS)
+                data[0] = 0x01;
+            else
+                data[0] = 0x00;
 
-            sendto(sock, data, len + SIZE_FRAME_HEADER, 0, (struct sockaddr*) &to, sizeof(to));
+            usleep(200);
+            sendto(sock, data, index * SIZE_PACKET_PIXEL + SIZE_FRAME_HEADER, 0,
+                   (struct sockaddr *) &to, sizeof(to));
         }
     }
 
-    void Screen::convertPixelFormat() {
+    void Screen::writeInt(uint32_t value, uint32_t offset) {
+        data[offset] = (value >> 24);
+        data[offset + 1] = (value >> 16);
+        data[offset + 2] = (value >> 8);
+        data[offset + 3] = (value);
     }
 }

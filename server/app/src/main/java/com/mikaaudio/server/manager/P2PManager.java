@@ -11,6 +11,7 @@ import java.net.ServerSocket;
 
 public class P2PManager {
     private static final String SERVICE_TYPE = "_http._tcp.";
+    private static final String TAG = "P2P";
 
     private ModuleManager moduleManager;
     private NsdManager nsdManager;
@@ -25,23 +26,23 @@ public class P2PManager {
         registrationListener = new NsdManager.RegistrationListener() {
             @Override
             public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                Log.e("registration failed", Integer.toString(errorCode));
+                Log.e(TAG, "registration failed with error code: " + errorCode);
             }
 
             @Override
             public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                Log.e("unregistration failed", Integer.toString(errorCode));
+                Log.e(TAG, "unregistration failed with error code: " + errorCode);
             }
 
             @Override
             public void onServiceRegistered(NsdServiceInfo serviceInfo) {
-                Log.d("service name", serviceInfo.getServiceName());
-                Log.d("status", "service registered");
+                Log.d(TAG, "service name: " + serviceInfo.getServiceName());
+                Log.d(TAG, "service registered");
             }
 
             @Override
             public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
-                Log.d("status", "service unregistered");
+                Log.d(TAG, "service unregistered");
             }
         };
     }
@@ -94,7 +95,7 @@ public class P2PManager {
             try {
                 running = true;
                 while(running) {
-                    Log.d("status", "accepting connections");
+                    Log.d(TAG, "accepting connections");
                     moduleManager.addSocket(serverSocket.accept());
                 }
             } catch (IOException e) {

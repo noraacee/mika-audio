@@ -11,6 +11,7 @@ import java.io.OutputStream;
 
 public class FrameModule {
     private static final String LIB_FRAME = "mikaframe";
+    private static final String TAG = "FRAME";
 
     private static volatile boolean connected;
 
@@ -23,12 +24,12 @@ public class FrameModule {
 
     public void stop() {
         if (connected) {
-            Log.d("status", "stopping");
+            Log.d(TAG, "stopping");
             stop(instance);
             destroy(instance);
             connected = false;
             instance = -1;
-            Log.d("status", "stopped");
+            Log.d(TAG, "stopped");
         }
     }
 
@@ -42,11 +43,11 @@ public class FrameModule {
                 out.write(ModuleManager.ACK);
 
                 if (init(in, ip)) {
-                    Log.d("status", "initiailized");
+                    Log.d(TAG, "initiailized");
                     out.write(ModuleManager.ACK);
                     start(in);
                 } else {
-                    Log.d("status", "failed to initialize");
+                    Log.d(TAG, "failed to initialize");
                     out.write(ModuleManager.REJECT);
                 }
             } else {
@@ -58,20 +59,14 @@ public class FrameModule {
     }
 
     private boolean init(InputStream in, String ip) throws IOException {
-        Log.d("status", "initializing");
+        Log.d(TAG, "initializing");
 
-        Log.d("status", "ip: " + ip);
+        Log.d(TAG, "ip: " + ip);
 
         int port = Stream.readInt(in);
-        Log.d("status", "port: " + port);
+        Log.d(TAG, "port: " + port);
 
-        int width = Stream.readInt(in);
-        Log.d("status", "width: " + width);
-
-        int height = Stream.readInt(in);
-        Log.d("status", "height: " + height);
-
-        instance = init(ip, port, width, height);
+        instance = init(ip, port);
 
         return instance != -1;
     }
@@ -86,7 +81,7 @@ public class FrameModule {
     private void start(InputStream in) throws IOException {
         if (in.read() == ModuleManager.ACK) {
             new Thread(new FrameTask(instance)).start();
-            Log.d("status", "started");
+            Log.d(TAG, "started");
             pollStop(in);
         } else {
             start(in);
@@ -94,7 +89,7 @@ public class FrameModule {
     }
 
     private static native long destroy(long screenPtr);
-    private static native long init(String ip, int port, int width, int height);
+    private static native long init(String ip, int port);
     private static native void start(long screenPtr);
     private static native void stop(long screenPtr);
 
