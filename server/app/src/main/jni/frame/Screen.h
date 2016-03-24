@@ -13,7 +13,6 @@
 
 #include <unistd.h>
 #include <string>
-#include <turbojpeg.h>
 
 const int SIZE_PIXEL = 4;
 const int SIZE_CONVERTED_PIXEL = 3;

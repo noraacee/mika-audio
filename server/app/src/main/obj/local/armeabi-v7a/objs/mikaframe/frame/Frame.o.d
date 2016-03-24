@@ -118,8 +118,7 @@ E:/Development/Capstone/mika-audio/server/app/src/main/obj/local/armeabi-v7a/obj
  C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_istream.c \
  C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_num_get.h \
  C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_num_get.c \
- C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_string_io.c \
- libjpeg-turbo/libjpeg-turbo-1.4.1/turbojpeg.h
+ C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_string_io.c
 
 E:/Development/Capstone/mika-audio/server/app/src/main/jni/frame/Screen.h:
 
@@ -422,5 +421,3 @@ C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_num_get
 C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_num_get.c:
 
 C:/Android/sdk/ndk-bundle/build//../sources/cxx-stl/stlport/stlport/stl/_string_io.c:
-
-libjpeg-turbo/libjpeg-turbo-1.4.1/turbojpeg.h:
