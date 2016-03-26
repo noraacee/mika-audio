@@ -2,15 +2,23 @@ package com.mikaaudio.client.widget;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import java.nio.ByteBuffer;
-
 public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
+    private static final int TIMEOUT = 50;
+
+    private double scale;
+
+    private int height;
+    private int pixelSize;
+    private int width;
+
     private FrameThread frameThread;
 
     public FrameView(Context context) {
@@ -28,24 +36,26 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         init();
     }
 
-    public int getSize() {
-        return frameThread.getSize();
+    public byte[] getBuffer() {
+        return frameThread.getBuffer();
     }
 
-    public void setDimensions(int width, int height) {
-        frameThread.setDimensions(width, height);
+    public void setDimensions(int width, int height, int pixelSize) {
+        this.width = width;
+        this.height = height;
+        this.pixelSize = pixelSize;
     }
 
-    public ByteBuffer getFrameBuffer() {
-        return frameThread.getFrameBuffer();
-    }
-
-    public void ready() {
-        frameThread.ready();
+    public void ready(int length) {
+        frameThread.ready(length);
     }
 
     public void start() {
-        frameThread.setRunning(true);
+        SurfaceHolder holder = getHolder();
+        holder.setFormat(PixelFormat.RGB_565);
+        holder.addCallback(this);
+
+        frameThread = new FrameThread(holder, width * height * pixelSize, scale);
         frameThread.start();
     }
 
@@ -57,6 +67,21 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
                 break;
             } catch (InterruptedException ignored) {}
         }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        int w = getMeasuredWidth();
+        scale = ((double) w) /  ((double) width);
+
+        int h = (w / 9) * 16;
+
+        setMeasuredDimension(w, h);
+
+        if (frameThread != null)
+            frameThread.setScale(scale);
     }
 
     @Override
@@ -76,81 +101,84 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
                 break;
             } catch (InterruptedException ignored) {}
         }
+
+        frameThread = null;
     }
 
     private void init() {
-        SurfaceHolder holder = getHolder();
-        holder.setFormat(PixelFormat.RGB_565);
-        holder.addCallback(this);
-
-        frameThread = new FrameThread(holder);
+        width = 0;
+        height = 0;
+        pixelSize = 0;
+        scale = 1;
     }
 
     private class FrameThread extends Thread {
         private boolean running;
 
-        private int size;
+        private byte[] buffer;
 
-        private ByteBuffer buffer;
+        private int length;
+
         private Bitmap pixels;
+        private BitmapFactory.Options frameOptions;
         private final SurfaceHolder holder;
 
-        public FrameThread(SurfaceHolder holder) {
+        public FrameThread(SurfaceHolder holder, int size, double scale) {
             this.holder = holder;
 
-            running = false;
-            buffer = null;
+            buffer = new byte[size];
+
+            frameOptions = new BitmapFactory.Options();
+            frameOptions.inScaled = true;
+            frameOptions.inDither = true;
+            setScale(scale);
+
+            running = true;
             pixels = null;
         }
 
         @Override
         public void run() {
-            while(running) {
-                Canvas canvas = null;
+            synchronized (holder) {
                 try {
-                    canvas = holder.lockCanvas(null);
-                    synchronized (holder) {
-                        if (running) {
-                            try {
-                                holder.wait();
-                            } catch (InterruptedException ignored) {}
+                    holder.wait();
+                } catch (InterruptedException ignored) { }
+            }
 
-                            draw(canvas);
-                            holder.notify();
-                        }
-                    }
-                } finally {
-                    if (canvas != null)
+            Canvas canvas = holder.lockCanvas(null);
+            while(running) {
+                synchronized (holder) {
+                    if (running) {
+                        draw(canvas);
                         holder.unlockCanvasAndPost(canvas);
+                        holder.notify();
+
+                        canvas = holder.lockCanvas(null);
+                        try {
+                            holder.wait();
+                        } catch (InterruptedException ignored) {}
+                    }
                 }
             }
         }
 
-        public ByteBuffer getFrameBuffer() {
+        public byte[] getBuffer() {
             return buffer;
         }
 
-        public int getSize() {
-            return size;
-        }
-
-        public void setDimensions(int width, int height) {
-            synchronized (holder) {
-                size = width * height;
-
-                pixels = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                pixels.setDensity(1);
-                buffer = ByteBuffer.allocate(pixels.getRowBytes() * height);
-            }
-        }
-
-        public void ready() {
+        public void ready(int length) {
+            this.length = length;
             synchronized (holder) {
                 holder.notify();
                 try {
-                    holder.wait();
+                    holder.wait(TIMEOUT);
                 } catch (InterruptedException ignored) {}
             }
+        }
+
+        public void setScale(double scale) {
+            frameOptions.inDensity = 10;
+            frameOptions.inTargetDensity = (int) (10.0 * scale);
         }
 
         public void setRunning(boolean running) {
@@ -160,10 +188,10 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         private void draw(Canvas canvas) {
-            if (pixels != null) {
-                pixels.copyPixelsFromBuffer(buffer);
+            pixels = BitmapFactory.decodeByteArray(buffer, 0, length, frameOptions);
+
+            if (pixels != null)
                 canvas.drawBitmap(pixels, 0, 0, null);
-            }
         }
     }
 }

@@ -48,7 +48,8 @@ public class P2PManager {
     }
 
     public void onDestroy() {
-        acceptClientTask.onDestroy();
+        if (acceptClientTask != null)
+            acceptClientTask.onDestroy();
         moduleManager.onDestroy();
         nsdManager.unregisterService(registrationListener);
     }

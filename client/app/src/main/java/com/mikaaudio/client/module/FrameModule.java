@@ -12,7 +12,6 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
 
 public class FrameModule {
     private static final int SIZE_PIXEL = 2;
@@ -59,7 +58,7 @@ public class FrameModule {
             connection.receive(packet);
             int width = Stream.readInt(packet.getData());
             int height = Stream.readInt(packet.getData(), 4);
-            frameView.setDimensions(width,height);
+            frameView.setDimensions(width,height, SIZE_PIXEL);
 
             Log.d(TAG, "dimensions: " + width + ", " + height);
 
@@ -113,11 +112,9 @@ public class FrameModule {
     private static class FrameTask implements Runnable {
         private volatile boolean running;
 
+        private byte[] buffer;
         private byte[] data;
 
-        private int pixels;
-
-        private ByteBuffer frameBuffer;
         private DatagramPacket packet;
         private DatagramSocket connection;
         private FrameView frameView;
@@ -129,8 +126,8 @@ public class FrameModule {
 
             running = false;
             data = packet.getData();
-            pixels = frameView.getSize() * SIZE_PIXEL;
-            frameBuffer = frameView.getFrameBuffer();
+
+            buffer = frameView.getBuffer();
         }
 
         public void stop() {
@@ -141,21 +138,20 @@ public class FrameModule {
         public void run() {
             running = true;
             int done;
+            int length;
+            long instant;
             while (running) {
                 try {
+                    packet.setLength(SIZE_DATA + SIZE_FRAME_HEADER);
                     connection.receive(packet);
 
-                    int index = Stream.read(data, 1) * SIZE_PIXEL;
-
-                    frameBuffer.position(index);
-                    frameBuffer.put(data, SIZE_FRAME_HEADER, packet.getLength() - SIZE_FRAME_HEADER);
+                    int index = Stream.read(data, 1);
+                    System.arraycopy(data, SIZE_FRAME_HEADER, buffer, index, packet.getLength() - SIZE_FRAME_HEADER);
 
                     done = Stream.readByte(data, 0);
                     if (done == 1) {
-                        frameBuffer.limit(pixels);
-                        frameBuffer.rewind();
-                        frameView.ready();
-                        frameBuffer.clear();
+                        length = index + packet.getLength() - SIZE_FRAME_HEADER;
+                        frameView.ready(length);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

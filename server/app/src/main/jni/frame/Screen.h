@@ -15,7 +15,7 @@
 #include <string>
 
 const int SIZE_PIXEL = 4;
-const int SIZE_CONVERTED_PIXEL = 3;
+const int SIZE_CONVERTED_PIXEL = 2;
 const int SIZE_PACKET_PIXEL = 2;
 
 const int SIZE_PACKET = 1500;
@@ -40,6 +40,7 @@ namespace android {
         int initCheck();
         void start();
         void stop();
+        int updateFrame(char* bitmapPtr);
 
     private:
         int initSucceed;
@@ -55,12 +56,10 @@ namespace android {
         Rect* sourceCrop;
         uint16_t r, g, b, rgb;
         uint32_t count, index, len, stride, bufferSize;
-        char hi, lo;
         char* bitmap;
         char* convertedBitmap;
         char data[SIZE_FRAME_HEADER + SIZE_DATA];
 
-        void convertPixelFormat();
         void initDisplay();
         void initSocket(char* ip, uint32_t port);
         void sendFrame();

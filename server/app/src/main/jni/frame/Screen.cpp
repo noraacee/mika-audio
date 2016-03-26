@@ -27,7 +27,14 @@ namespace android {
         running = false;
     }
 
-    void Screen::convertPixelFormat() {
+    int Screen::updateFrame(char *bitmapPtr) {
+        status_t err = client->update(display, *sourceCrop, WIDTH, HEIGHT, false);
+        if (err != NO_ERROR)
+            return err;
+
+        stride = (client->getStride() - WIDTH) * 4;
+        bitmap = (char*) client->getPixels();
+
         count = 0;
         for (index = 0; index < SIZE; index += SIZE_CONVERTED_PIXEL) {
             if (index % (WIDTH * SIZE_CONVERTED_PIXEL) == 0 && count != 0)
@@ -38,19 +45,14 @@ namespace android {
             b = (bitmap[count + 2] >> 3) & 0x001f;
             rgb = (uint16_t) (r | g | b);
 
-            hi = rgb & 0xFF;
-            lo = rgb >> 8;
-
-            //if (convertedBitmap[index] == hi && convertedBitmap[index + 1] == lo) {
-                //convertedBitmap[index + 2] = 0x01;
-            //} else {
-                convertedBitmap[index] = hi;
-                convertedBitmap[index + 1] = lo;
-                //convertedBitmap[index + 2] = 0;
-            //}
+            *bitmapPtr = rgb & 0xFF;
+            *(bitmapPtr + 1) = rgb >> 8;
 
             count += SIZE_PIXEL;
+            bitmapPtr += SIZE_PACKET_PIXEL;
         }
+
+        return NO_ERROR;
     }
 
     void Screen::initDisplay() {
@@ -106,7 +108,7 @@ namespace android {
     }
 
     void Screen::sendFrame() {
-        status_t err = client->update(display, *sourceCrop, WIDTH, HEIGHT, false);
+        /*status_t err = client->update(display, *sourceCrop, WIDTH, HEIGHT, false);
         if (err != NO_ERROR)
             return;
 
@@ -117,11 +119,6 @@ namespace android {
 
         count = 0;
         while (count < PIXELS) {
-            //while (convertedBitmap[count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL + 2] == 0x01) {}
-                //count++;
-
-            //if (count > PIXELS)
-                //break;
 
             data[1] = (count >> 16) & 0xFF;
             data[2] = (count >> 8) & 0xFF;
@@ -133,8 +130,6 @@ namespace android {
                 len = SIZE_DATA / SIZE_PACKET_PIXEL;
 
             for (index = 0; index < len; index++) {
-                //if (convertedBitmap[count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL + 2] == 0x01)
-                    //break;
                 data[SIZE_FRAME_HEADER + index * SIZE_PACKET_PIXEL] = convertedBitmap[
                         count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL];
                 data[SIZE_FRAME_HEADER + index * SIZE_PACKET_PIXEL + 1] = convertedBitmap[
@@ -151,7 +146,7 @@ namespace android {
             usleep(200);
             sendto(sock, data, index * SIZE_PACKET_PIXEL + SIZE_FRAME_HEADER, 0,
                    (struct sockaddr *) &to, sizeof(to));
-        }
+        }*/
     }
 
     void Screen::writeInt(uint32_t value, uint32_t offset) {

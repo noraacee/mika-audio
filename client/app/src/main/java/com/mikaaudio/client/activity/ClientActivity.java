@@ -40,6 +40,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
     private Button toggle;
     private Button up;
     private EditText sendView;
+    private FrameView display;
     private InterceptKeyEventLinearLayout contentView;
 
     private ModuleManager moduleManager;
@@ -183,6 +184,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
         toggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                display.setVisibility(View.VISIBLE);
                 moduleManager.getFrameModule().start();
             }
         });
@@ -203,7 +205,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        FrameView display = (FrameView) findViewById(R.id.display);
+        display = (FrameView) findViewById(R.id.display);
 
         inputMethodManager = (InputMethodManager) ClientActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
 

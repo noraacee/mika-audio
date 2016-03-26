@@ -26,4 +26,11 @@ public class Stream {
 
         return b1 << 24 | (b2 & 0xFF) << 16 | (b3 & 0xFF) << 8 | (b4 & 0xFF);
     }
+
+    public static void writeInt(byte[] data, int value) {
+        data[0] = (byte) (value >>> 24);
+        data[1] = (byte) (value >>> 16);
+        data[2] = (byte) (value >>> 8);
+        data[3] = (byte) (value);
+    }
 }
