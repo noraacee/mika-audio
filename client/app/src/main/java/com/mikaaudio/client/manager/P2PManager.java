@@ -99,7 +99,7 @@ public class P2PManager {
                     discovering = false;
 
 
-                    Log.d("status", "connected socket at host " + serviceInfo.getHost() + " and port " + serviceInfo.getPort());
+                    Log.d("status", "connected socket at host " + serviceInfo.getHost().getHostAddress() + " and port " + serviceInfo.getPort());
                 } catch (IOException e) {
                     onDestroy();
                     connect();

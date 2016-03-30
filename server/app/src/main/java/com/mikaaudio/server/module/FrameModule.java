@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.mikaaudio.server.manager.ModuleManager;
-import com.mikaaudio.server.util.Stream;
+import com.mikaaudio.server.util.ByteUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,11 +20,12 @@ public class FrameModule {
 
     private static final int QUALITY_COMPRESSION = 50;
 
-    private static final int SIZE_PACKET = 1500;
+    private static final int SIZE_FRAME_PACKET = 1500;
+    private static final int SIZE_INPUT_PACKET = 32;
     private static final int SIZE_IP_HEADER = 20;
     private static final int SIZE_UDP_HEADER = 8;
     private static final int SIZE_FRAME_HEADER = 4;
-    private static final int SIZE_DATA = SIZE_PACKET - SIZE_IP_HEADER - SIZE_UDP_HEADER - SIZE_FRAME_HEADER;
+    private static final int SIZE_DATA = SIZE_FRAME_PACKET - SIZE_IP_HEADER - SIZE_UDP_HEADER - SIZE_FRAME_HEADER;
 
     private static final String LIB_FRAME = "mikaframe";
     private static final String TAG = "FRAME";
@@ -38,7 +39,10 @@ public class FrameModule {
         System.loadLibrary(LIB_FRAME);
     }
 
+    private DatagramPacket packet;
+    private DatagramSocket socket;
     private FrameTask frameTask;
+    private InputModule inputModule;
 
     public void stop() {
         if (connected) {
@@ -55,12 +59,13 @@ public class FrameModule {
         stop();
     }
 
-    public void start(InputStream in, OutputStream out, String ip) {
+    public void start(InputStream in, OutputStream out, InputModule inputModule, InetAddress localIp, InetAddress targetIp) {
+        this.inputModule = inputModule;
         try {
             if (!connected) {
                 out.write(ModuleManager.ACK);
 
-                if (init(in, ip)) {
+                if (init(in, out, localIp, targetIp)) {
                     Log.d(TAG, "initiailized");
                     out.write(ModuleManager.ACK);
                     start(in);
@@ -76,40 +81,43 @@ public class FrameModule {
         }
     }
 
-    private boolean init(InputStream in, String ip) throws IOException {
+    private boolean init(InputStream in, OutputStream out, InetAddress localIp, InetAddress targetIp) throws IOException {
         Log.d(TAG, "initializing");
 
-        Log.d(TAG, "ip: " + ip);
+        int framePort = ByteUtil.readInt(in);
+        Log.d(TAG, "frame port: " + framePort);
 
-        int port = Stream.readInt(in);
-        Log.d(TAG, "port: " + port);
+        socket = new DatagramSocket(0, localIp);
+        packet = new DatagramPacket(new byte[SIZE_INPUT_PACKET], SIZE_INPUT_PACKET);
 
-        instance = init(ip, port);
+        Log.d(TAG, "sending input port: " + socket.getLocalPort());
+        ByteUtil.writeInt(out, socket.getLocalPort());
 
-        frameTask = new FrameTask(instance, ip, port);
+        instance = init(targetIp.getHostAddress(), framePort, WIDTH, HEIGHT);
+
+        frameTask = new FrameTask(instance, targetIp, framePort);
 
         return instance != -1;
     }
 
-    private void pollStop(InputStream in) throws IOException {
-        if (in.read() != ModuleManager.ACK)
-            pollStop(in);
-        else
-            stop();
+    private void parse() throws IOException {
+        inputModule.listen(socket, packet);
+        stop();
     }
 
     private void start(InputStream in) throws IOException {
         if (in.read() == ModuleManager.ACK) {
             new Thread(frameTask).start();
             Log.d(TAG, "started");
-            pollStop(in);
+            parse();
         } else {
             start(in);
         }
     }
 
     private static native long destroy(long screenPtr);
-    private static native long init(String ip, int port);
+    private static native long init(String ip, int port, int width, int height);
+    private static native void start(long screenPtr);
     private static native void stop(long screenPtr);
     private static native int updateFrame(long screenPtr, Bitmap frame);
 
@@ -127,11 +135,10 @@ public class FrameModule {
         private DatagramPacket packet;
         private DatagramSocket socket;
 
-        public FrameTask(long screenPtr, String ipString, int port) throws IOException {
+        public FrameTask(long screenPtr, InetAddress ip, int port) throws IOException {
             this.screenPtr = screenPtr;
             socket = new DatagramSocket();
 
-            InetAddress ip = InetAddress.getByName(ipString);
             data = new byte[SIZE_FRAME_HEADER + SIZE_DATA];
             packet = new DatagramPacket(data, SIZE_FRAME_HEADER + SIZE_DATA, ip, port);
 
@@ -141,6 +148,7 @@ public class FrameModule {
 
         @Override
         public void run() {
+            //start(screenPtr);
             while (true) {
                 if (updateFrame(screenPtr, frame) == 0) {
                     frame.compress(Bitmap.CompressFormat.JPEG, QUALITY_COMPRESSION, bStream);
@@ -149,7 +157,7 @@ public class FrameModule {
 
                     count = 0;
                     while (count < bitmap.length) {
-                        Stream.writeInt(data, count);
+                        ByteUtil.writeInt(data, count);
 
                         if (count + SIZE_DATA > bitmap.length)
                             length = bitmap.length - count;

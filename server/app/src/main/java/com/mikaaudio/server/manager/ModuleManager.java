@@ -102,7 +102,9 @@ public class ModuleManager {
                             break;
                         case MODULE_FRAME:
                             Log.d(TAG, "module frame");
-                            frameModule.start(in, out, connection.getConnection().getInetAddress().getHostAddress());
+                            frameModule.start(in, out, inputModule,
+                                    connection.getConnection().getLocalAddress(),
+                                    connection.getConnection().getInetAddress());
                             break;
                     }
                 }

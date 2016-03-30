@@ -10,6 +10,10 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+
+        ndk {
+            moduleName "Client"
+        }
     }
 
     buildTypes {
@@ -18,6 +22,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    sourceSets.main {
+        jni.srcDirs = []
+        jniLibs.srcDirs 'src/main/libs'
+    }
+}
+
+task ndkbuild(type: Exec) {
+    def ndkDir = android.ndkDirectory
+    commandLine "$ndkDir\\ndk-build.cmd", '-C', file('src/main/jni').absolutePath
+}
+
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn ndkbuild
 }
 
 dependencies {

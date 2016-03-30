@@ -5,19 +5,30 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
+import android.view.MotionEvent;
 
 import com.mikaaudio.server.manager.ModuleManager;
-import com.mikaaudio.server.util.Stream;
+import com.mikaaudio.server.util.ByteUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 
 public class InputModule {
     private static final int MODE_EXIT = 0x00;
     private static final int MODE_KEY = 0x01;
     private static final int MODE_TEXT = 0x02;
+    private static final int MODE_EVENT = 0x03;
+
+    private static final int POSITION_DOWN_TIME = 0;
+    private static final int POSITION_EVENT_TIME = 8;
+    private static final int POSITION_ACTION = 16;
+    private static final int POSITION_X = 20;
+    private static final int POSITION_Y = 24;
+    private static final int POSITION_META_STATE = 28;
 
     private static final String TAG = "INPUT";
 
@@ -33,6 +44,12 @@ public class InputModule {
         }
     }
 
+    public void inputMotionEvent(MotionEvent ev) {
+        synchronized (inputThread) {
+            inputThread.inputMotionEvent(ev);
+        }
+    }
+
     public void inputString(String text) {
         synchronized (inputThread) {
             inputThread.inputString(text);
@@ -40,7 +57,7 @@ public class InputModule {
     }
 
     public void listen(InputStream in, OutputStream out) {
-        byte[] buffer = new byte[Stream.LENGTH_BUFFER];
+        byte[] buffer = new byte[ByteUtil.LENGTH_BUFFER];
         ByteArrayOutputStream inString = new ByteArrayOutputStream();
 
         try {
@@ -58,12 +75,31 @@ public class InputModule {
                         inputKeyEvent(in.read());
                         break;
                     case MODE_TEXT:
-                        inputString(Stream.readString(in, inString, buffer));
+                        inputString(ByteUtil.readString(in, inString, buffer));
                         break;
                 }
             }
 
             out.write(ModuleManager.ACK);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void listen(DatagramSocket connection, DatagramPacket packet) {
+        try {
+            byte[] data = packet.getData();
+            while (true) {
+                connection.receive(packet);
+                long downTime = ByteUtil.readLong(data, POSITION_DOWN_TIME);
+                long eventTime = ByteUtil.readLong(data, POSITION_EVENT_TIME);
+                int action = ByteUtil.readInt(data, POSITION_ACTION);
+                float x = ByteUtil.readFloat(data, POSITION_X);
+                float y = ByteUtil.readFloat(data, POSITION_Y);
+                int metaState = ByteUtil.readInt(data, POSITION_META_STATE);
+
+                inputMotionEvent(MotionEvent.obtain(downTime, eventTime, action, x, y, metaState));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -86,6 +122,10 @@ public class InputModule {
             inputHandler.obtainMessage(MODE_KEY, key, 0).sendToTarget();
         }
 
+        public void inputMotionEvent(MotionEvent ev) {
+            inputHandler.obtainMessage(MODE_EVENT, ev).sendToTarget();
+        }
+
         public void inputString(String text) {
             inputHandler.obtainMessage(MODE_TEXT, text).sendToTarget();
         }
@@ -103,6 +143,9 @@ public class InputModule {
                             Log.d(TAG, "received key: " + msg.obj);
                             inputDispatcher.sendStringSync((String) msg.obj);
                             break;
+                        case MODE_EVENT:
+                            Log.d(TAG, "received event: " + msg.obj);
+                            inputDispatcher.sendPointerSync((MotionEvent) msg.obj);
                     }
                     return true;
                 }

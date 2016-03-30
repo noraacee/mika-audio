@@ -11,6 +11,7 @@
 
 #include <private/gui/ComposerService.h>
 
+#include <turbojpeg.h>
 #include <unistd.h>
 #include <string>
 
@@ -25,16 +26,14 @@ const int SIZE_FRAME_HEADER = 4;
 
 const int SIZE_DATA = SIZE_PACKET - SIZE_IP_HEADER - SIZE_UDP_HEADER - SIZE_FRAME_HEADER;
 
-const int HEIGHT = 1280;
-const int WIDTH = 720;
-const int PIXELS = WIDTH * HEIGHT;
-const int SIZE = PIXELS * SIZE_CONVERTED_PIXEL;
+const int JPEG_QUALITY = 75;
+
 
 namespace android {
     class Screen {
 
     public:
-        Screen(char* ip, uint32_t port);
+        Screen(char* ip, uint32_t port, uint32_t w, uint32_t h);
         ~Screen();
 
         int initCheck();
@@ -53,12 +52,15 @@ namespace android {
 
         ScreenshotClient* client;
         sp<IBinder> display;
+        tjhandle compressor;
         Rect* sourceCrop;
         uint16_t r, g, b, rgb;
+        uint32_t width, height, pixels;
         uint32_t count, index, len, stride, bufferSize;
-        char* bitmap;
-        char* convertedBitmap;
-        char data[SIZE_FRAME_HEADER + SIZE_DATA];
+        unsigned long size;
+        unsigned char* bitmap;
+        unsigned char* convertedBitmap;
+        unsigned char data[SIZE_FRAME_HEADER + SIZE_DATA];
 
         void initDisplay();
         void initSocket(char* ip, uint32_t port);

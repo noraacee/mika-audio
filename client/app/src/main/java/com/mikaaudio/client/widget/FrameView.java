@@ -6,9 +6,11 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.util.AttributeSet;
-import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import com.mikaaudio.client.module.InputModule;
 
 public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
     private static final int TIMEOUT = 50;
@@ -20,6 +22,7 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
     private int width;
 
     private FrameThread frameThread;
+    private InputModule inputModule;
 
     public FrameView(Context context) {
         super(context);
@@ -36,8 +39,22 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         init();
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (inputModule != null) {
+            inputModule.sendInput(ev);
+            return true;
+        }
+
+        return false;
+    }
+
     public byte[] getBuffer() {
         return frameThread.getBuffer();
+    }
+
+    public void ready(int length) {
+        frameThread.ready(length);
     }
 
     public void setDimensions(int width, int height, int pixelSize) {
@@ -46,8 +63,8 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         this.pixelSize = pixelSize;
     }
 
-    public void ready(int length) {
-        frameThread.ready(length);
+    public void setInputModule(InputModule inputModule) {
+        this.inputModule = inputModule;
     }
 
     public void start() {

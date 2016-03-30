@@ -3,7 +3,7 @@ package com.mikaaudio.client.module;
 import android.util.Log;
 
 import com.mikaaudio.client.manager.ModuleManager;
-import com.mikaaudio.client.util.Stream;
+import com.mikaaudio.client.util.ByteUtil;
 import com.mikaaudio.client.widget.FrameView;
 
 import java.io.IOException;
@@ -25,48 +25,55 @@ public class FrameModule {
 
     private boolean running;
 
-    private DatagramPacket packet;
-    private DatagramSocket connection;
+    private DatagramPacket framePacket;
+    private DatagramSocket frameConnection;
     private InputStream in;
     private OutputStream out;
 
     private FrameTask frameTask;
     private FrameView frameView;
+    private InputModule inputModule;
 
-    public FrameModule(InputStream in, OutputStream out, FrameView frameView) {
+    public FrameModule(InputStream in, OutputStream out, FrameView frameView, InputModule inputModule) {
         this.in = in;
         this.out = out;
         this.frameView = frameView;
+        this.inputModule = inputModule;
 
         running = false;
     }
 
-    public boolean init(String ip) {
+    public boolean init(InetAddress localIp, InetAddress targetIp) {
         try {
             Log.d(TAG, "initializing frame");
 
-            Log.d(TAG, "socket created at ip: " + ip);
-            connection = new DatagramSocket(0, InetAddress.getByName(ip));
+            frameConnection = new DatagramSocket(0, localIp);
+            framePacket = new DatagramPacket(new byte[SIZE_DATA + SIZE_FRAME_HEADER], SIZE_DATA + SIZE_FRAME_HEADER);
 
-            packet = new DatagramPacket(new byte[SIZE_DATA + SIZE_FRAME_HEADER], SIZE_DATA + SIZE_FRAME_HEADER);
+            Log.d(TAG, "sending frame port: " + frameConnection.getLocalPort());
+            ByteUtil.writeInt(out, frameConnection.getLocalPort());
 
-            Log.d(TAG, "sending port: " + connection.getLocalPort());
-            Stream.writeInt(out, connection.getLocalPort());
+            int inputPort = ByteUtil.readInt(in);
+            Log.d(TAG, "input port: " + inputPort);
+
+            inputModule.initFrameInput(targetIp, inputPort);
+            frameView.setInputModule(inputModule);
 
             Log.d(TAG, "done sending");
 
-            connection.receive(packet);
-            int width = Stream.readInt(packet.getData());
-            int height = Stream.readInt(packet.getData(), 4);
-            frameView.setDimensions(width,height, SIZE_PIXEL);
+            frameConnection.receive(framePacket);
+            int width = ByteUtil.readInt(framePacket.getData());
+            int height = ByteUtil.readInt(framePacket.getData(), 4);
+            frameView.setDimensions(width, height, SIZE_PIXEL);
+
 
             Log.d(TAG, "dimensions: " + width + ", " + height);
 
-            int bufferSize = connection.getReceiveBufferSize();
+            int bufferSize = frameConnection.getReceiveBufferSize();
             Log.d(TAG, "receive buffer: " + bufferSize);
 
-            Stream.writeInt(packet.getData(), bufferSize);
-            connection.send(packet);
+            ByteUtil.writeInt(framePacket.getData(), bufferSize);
+            frameConnection.send(framePacket);
 
             return in.read() == ModuleManager.ACK;
         } catch (IOException e) {
@@ -80,17 +87,6 @@ public class FrameModule {
             stop();
     }
 
-    public void stop() {
-        try {
-            out.write(ModuleManager.ACK);
-            frameView.stop();
-            frameTask.stop();
-            running = false;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void start() {
         if (running)
             return;
@@ -98,12 +94,23 @@ public class FrameModule {
         Log.d(TAG, "starting frame");
 
         frameView.start();
-        frameTask = new FrameTask(connection, packet, frameView);
+        frameTask = new FrameTask(frameConnection, framePacket, frameView);
         new Thread(frameTask).start();
 
         try {
             out.write(ModuleManager.ACK);
             running = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void stop() {
+        try {
+            out.write(ModuleManager.ACK);
+            frameView.stop();
+            frameTask.stop();
+            running = false;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -145,10 +152,10 @@ public class FrameModule {
                     packet.setLength(SIZE_DATA + SIZE_FRAME_HEADER);
                     connection.receive(packet);
 
-                    int index = Stream.read(data, 1);
+                    int index = ByteUtil.read(data, 1);
                     System.arraycopy(data, SIZE_FRAME_HEADER, buffer, index, packet.getLength() - SIZE_FRAME_HEADER);
 
-                    done = Stream.readByte(data, 0);
+                    done = ByteUtil.readByte(data, 0);
                     if (done == 1) {
                         length = index + packet.getLength() - SIZE_FRAME_HEADER;
                         frameView.ready(length);

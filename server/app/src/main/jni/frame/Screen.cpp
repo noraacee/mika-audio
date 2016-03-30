@@ -1,7 +1,11 @@
 #include "Screen.h"
 
 namespace android {
-    Screen::Screen(char* ip, uint32_t port) {
+    Screen::Screen(char* ip, uint32_t port, uint32_t w, uint32_t h) {
+        width = w;
+        height = h;
+        pixels = width * height * SIZE_CONVERTED_PIXEL;
+
         initSucceed = 0;
         initSocket(ip, port);
         if (initSucceed == 0)
@@ -28,16 +32,16 @@ namespace android {
     }
 
     int Screen::updateFrame(char *bitmapPtr) {
-        status_t err = client->update(display, *sourceCrop, WIDTH, HEIGHT, false);
+        status_t err = client->update(display, *sourceCrop, width, height, false);
         if (err != NO_ERROR)
             return err;
 
-        stride = (client->getStride() - WIDTH) * 4;
-        bitmap = (char*) client->getPixels();
+        stride = (client->getStride() - width) * 4;
+        bitmap = (unsigned char*) client->getPixels();
 
         count = 0;
-        for (index = 0; index < SIZE; index += SIZE_CONVERTED_PIXEL) {
-            if (index % (WIDTH * SIZE_CONVERTED_PIXEL) == 0 && count != 0)
+        for (index = 0; index < pixels; index += SIZE_CONVERTED_PIXEL) {
+            if (index % (width * SIZE_CONVERTED_PIXEL) == 0 && count != 0)
                 count += stride;
 
             r = ((bitmap[count] >> 3) & 0x001f ) << 11;
@@ -65,12 +69,10 @@ namespace android {
 
         sourceCrop = new Rect();
 
-        convertedBitmap = new char[SIZE];
-        for (int i = 0; i < SIZE; i++)
-            convertedBitmap[i] = 0;
+        convertedBitmap = NULL;
 
-        writeInt(WIDTH, 0);
-        writeInt(HEIGHT, 4);
+        writeInt(width, 0);
+        writeInt(height, 4);
 
         sendto(sock, data, 8, 0, (struct sockaddr*) &to, sizeof(to));
         recvfrom(sock, data, 4, 0, 0, 0);
@@ -108,45 +110,42 @@ namespace android {
     }
 
     void Screen::sendFrame() {
-        /*status_t err = client->update(display, *sourceCrop, WIDTH, HEIGHT, false);
+        status_t err = client->update(display, *sourceCrop, width, height, false);
         if (err != NO_ERROR)
             return;
 
-        stride = (client->getStride() - WIDTH) * 4;
-        bitmap = (char*) client->getPixels();
+        stride = (client->getStride() - width) * 4;
+        bitmap = (unsigned char*) client->getPixels();
 
-        convertPixelFormat();
+        compressor = tjInitCompress();
+        tjCompress2(compressor, bitmap, width, stride, height, TJPF_RGBA, &convertedBitmap, &size, TJSAMP_444, JPEG_QUALITY, TJFLAG_FASTDCT);
 
         count = 0;
-        while (count < PIXELS) {
-
+        while (count < size) {
             data[1] = (count >> 16) & 0xFF;
             data[2] = (count >> 8) & 0xFF;
             data[3] = count & 0xFF;
 
-            if (count + SIZE_DATA / SIZE_PACKET_PIXEL > PIXELS)
-                len = PIXELS - count;
+            if (count + SIZE_DATA > size)
+                len = size - count;
             else
-                len = SIZE_DATA / SIZE_PACKET_PIXEL;
+                len = SIZE_DATA;
 
-            for (index = 0; index < len; index++) {
-                data[SIZE_FRAME_HEADER + index * SIZE_PACKET_PIXEL] = convertedBitmap[
-                        count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL];
-                data[SIZE_FRAME_HEADER + index * SIZE_PACKET_PIXEL + 1] = convertedBitmap[
-                        count * SIZE_CONVERTED_PIXEL + index * SIZE_CONVERTED_PIXEL + 1];
-            }
+            for (index = 0; index < len; index++)
+                data[SIZE_FRAME_HEADER + index] = convertedBitmap[
+                        count + index];
 
             count += index;
 
-            if (count == PIXELS)
+            if (count == size)
                 data[0] = 0x01;
             else
                 data[0] = 0x00;
 
-            usleep(200);
-            sendto(sock, data, index * SIZE_PACKET_PIXEL + SIZE_FRAME_HEADER, 0,
-                   (struct sockaddr *) &to, sizeof(to));
-        }*/
+            sendto(sock, data, index + SIZE_FRAME_HEADER, 0, (struct sockaddr *) &to, sizeof(to));
+        }
+
+        tjDestroy(compressor);
     }
 
     void Screen::writeInt(uint32_t value, uint32_t offset) {

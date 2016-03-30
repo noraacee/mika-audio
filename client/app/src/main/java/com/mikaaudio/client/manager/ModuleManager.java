@@ -101,9 +101,8 @@ public class ModuleManager {
         OutputStream out = socket.getOutputStream();
 
         moduleThread = new ModuleThread(in, out);
-
         inputModule = new InputModule(out);
-        frameModule = new FrameModule(in, out, frameView);
+        frameModule = new FrameModule(in, out, frameView, inputModule);
 
         uiHandler.obtainMessage(HANDLER_CONNECTED).sendToTarget();
 
@@ -206,7 +205,7 @@ public class ModuleManager {
                                         out.write(MODULE_FRAME);
                                         if (in.read() != ACK)
                                             break;
-                                        if (frameModule.init(socket.getLocalAddress().getHostAddress()))
+                                        if (frameModule.init(socket.getLocalAddress(), socket.getInetAddress()))
                                             uiHandler.obtainMessage(HANDLER_MODULE, MODULE_FRAME, 0).sendToTarget();
                                 }
                                 break;
