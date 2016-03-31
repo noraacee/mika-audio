@@ -26,6 +26,8 @@ public class IrModule {
     private static final int IR_KEY_RIGHT = 0x00010033;
     private static final int IR_KEY_LEFT = 0x00010034;
     private static final int IR_KEY_HOME = 0x00010060;
+    private static final int IR_KEY_APP = 0x009700b6;
+    private static final int IR_KEY_BACK = 0x0009700a3;
 
     private static final String TAG = "IR";
 
@@ -39,6 +41,8 @@ public class IrModule {
         KEY_PROTOCOLS.put(IR_KEY_DOWN, KEY_DOWN);
         KEY_PROTOCOLS.put(IR_KEY_CLICK, KEY_CLICK);
         KEY_PROTOCOLS.put(IR_KEY_HOME, KEY_HOME);
+        KEY_PROTOCOLS.put(IR_KEY_APP, KEY_APPS);
+        KEY_PROTOCOLS.put(IR_KEY_BACK, KEY_BACK);
     }
 
     private IrParser irParser;
@@ -47,6 +51,7 @@ public class IrModule {
         try {
             BufferedInputStream iStream = new BufferedInputStream(new FileInputStream("/dev/input/event0"));
             irParser = new IrParser(iStream, inputModule);
+            Log.d(TAG, "Initializing IR parser");
             new Thread(irParser).start();
         } catch (IOException e) {
             Log.d(TAG, "Failed to open IR device");
@@ -67,7 +72,7 @@ public class IrModule {
         public IrParser(BufferedInputStream iStream, InputModule inputModule) {
             this.iStream = iStream;
             this.inputModule = inputModule;
-            running = false;
+            running = true;
         }
 
         public void onDestroy() {
