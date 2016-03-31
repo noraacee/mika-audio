@@ -18,11 +18,11 @@ public class ModuleManager {
     public static final int ACK = 0xFF;
     public static final int REJECT = 0xFE;
 
+    public static final int SOCKET_TIMEOUT = 5000;
+
     private static final int MODULE_EXIT = 0x00;
     private static final int MODULE_INPUT = 0x01;
     private static final int MODULE_FRAME = 0x02;
-
-    private static final int SOCKET_TIMEOUT = 3600000;
 
     private static final String TAG = "MODULE";
 
