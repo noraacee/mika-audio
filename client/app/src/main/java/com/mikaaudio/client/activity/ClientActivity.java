@@ -75,7 +75,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
         click = (ButtonView) findViewById(R.id.click);
         click.setOnClickListener(new View.OnClickListener() {
             @Override
-        public void onClick(View v) {
+            public void onClick(View v) {
                 moduleManager.getInputModule().sendInput(InputModule.KEY_CLICK);
             }
         });
@@ -163,6 +163,10 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
+        setClickable(false);
+        input.setClickable(false);
+        frame.setClickable(false);
+
         display = (FrameView) findViewById(R.id.display);
 
         moduleManager = new ModuleManager(this, display);
@@ -185,22 +189,22 @@ public class ClientActivity extends Activity implements UICallbackListener {
             p2pManager.connect();
     }
 
-    private void setEnabled(boolean enabled) {
-        click.setEnabled(enabled);
-        back.setEnabled(enabled);
-        home.setEnabled(enabled);
-        apps.setEnabled(enabled);
-        up.setEnabled(enabled);
-        down.setEnabled(enabled);
-        left.setEnabled(enabled);
-        right.setEnabled(enabled);
-        keyboard.setEnabled(enabled);
+    private void setClickable(boolean clickable) {
+        click.setClickable(clickable);
+        back.setClickable(clickable);
+        home.setClickable(clickable);
+        apps.setClickable(clickable);
+        up.setClickable(clickable);
+        down.setClickable(clickable);
+        left.setClickable(clickable);
+        right.setClickable(clickable);
+        keyboard.setClickable(clickable);
     }
 
     @Override
     public void onConnect() {
-        input.setEnabled(true);
-        frame.setEnabled(true);
+        input.setClickable(true);
+        frame.setClickable(true);
 
         Toast.makeText(getApplicationContext(), "Connected to Network", Toast.LENGTH_SHORT).show();
         connected = true;
@@ -208,10 +212,10 @@ public class ClientActivity extends Activity implements UICallbackListener {
 
     @Override
     public void onDisconnect() {
-        input.setEnabled(false);
-        frame.setEnabled(false);
+        input.setClickable(false);
+        frame.setClickable(false);
 
-        setEnabled(false);
+        setClickable(false);
 
         Toast.makeText(getApplicationContext(), "Disconnected from Network", Toast.LENGTH_SHORT).show();
         connected = false;
@@ -220,13 +224,13 @@ public class ClientActivity extends Activity implements UICallbackListener {
     @Override
     public void onModuleChanged(int module) {
         if (module == ModuleManager.MODULE_INPUT) {
-            input.setEnabled(false);
+            input.setClickable(false);
             toggle.setEnabled(false);
-            setEnabled(true);
+            setClickable(true);
         } else if (module == ModuleManager.MODULE_FRAME) {
-            frame.setEnabled(false);
+            frame.setClickable(false);
             toggle.setEnabled(true);
-            setEnabled(false);
+            setClickable(false);
         }
     }
 }

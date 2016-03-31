@@ -13,6 +13,8 @@ import android.view.SurfaceView;
 import com.mikaaudio.client.module.InputModule;
 
 public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
+    private static final float RATIO = 16f/ 9f;
+
     private static final int TIMEOUT = 50;
 
     private float scale;
@@ -101,7 +103,7 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         screenWidth = getMeasuredWidth();
         scale = screenWidth / ((float) width);
 
-        screenHeight = (screenWidth / 9) * 16;
+        screenHeight = screenWidth * RATIO;
 
         setMeasuredDimension((int) screenWidth, (int) screenHeight);
 
@@ -157,6 +159,8 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
 
             frameOptions = new BitmapFactory.Options();
             frameOptions.inDither = true;
+            frameOptions.inMutable = true;
+            frameOptions.inPreferredConfig = Bitmap.Config.RGB_565;
             frameOptions.inScaled = true;
 
             running = true;
@@ -203,9 +207,9 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         public void setDimensions(int screenWidth, int screenHeight, int pixelSize) {
-            pixels = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
+            pixels = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.RGB_565);
             frameOptions.inBitmap = pixels;
-            frameOptions.inTempStorage = new byte[screenWidth * screenHeight * pixelSize * 2];
+            frameOptions.inTempStorage = new byte[screenWidth * screenHeight * pixelSize];
         }
 
         public void setScale(double scale) {

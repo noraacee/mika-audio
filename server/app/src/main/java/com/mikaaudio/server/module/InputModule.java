@@ -27,11 +27,6 @@ public class InputModule {
     private static final int MODE_TEXT = 0x02;
     private static final int MODE_EVENT = 0x03;
 
-    private static final int POSITION_ACTION = 0;
-    private static final int POSITION_X = 4;
-    private static final int POSITION_Y = 8;
-    private static final int POSITION_META_STATE = 12;
-
     private float screenHeight;
     private float screenWidth;
 
@@ -93,30 +88,6 @@ public class InputModule {
             }
 
             out.write(ModuleManager.ACK);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void listen(DatagramSocket connection, DatagramPacket packet) {
-        try {
-            byte[] data = packet.getData();
-            long downTime = SystemClock.uptimeMillis();
-            while (true) {
-                connection.receive(packet);
-                long eventTime = SystemClock.uptimeMillis();
-
-                int action = ByteUtil.readInt(data, POSITION_ACTION);
-                if (action == MotionEvent.ACTION_DOWN)
-                    downTime = SystemClock.uptimeMillis();
-
-                float x = ByteUtil.readFloat(data, POSITION_X) * screenWidth;
-                float y = ByteUtil.readFloat(data, POSITION_Y) * screenHeight;
-
-                int metaState = ByteUtil.readInt(data, POSITION_META_STATE);
-
-                inputMotionEvent(MotionEvent.obtain(downTime, eventTime, action, x, y, metaState));
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }

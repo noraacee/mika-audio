@@ -11,7 +11,7 @@ import android.widget.ImageView;
  */
 public class ButtonView extends ImageView {
     private static final float TRANSPARENCY = 0.5f;
-    private boolean enabled;
+    private boolean clickable;
 
     public ButtonView(Context context) {
         super(context);
@@ -30,7 +30,7 @@ public class ButtonView extends ImageView {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (enabled) {
+        if (clickable) {
             if (ev.getAction() == KeyEvent.ACTION_DOWN)
                 setAlpha(TRANSPARENCY);
             else if (ev.getAction() == KeyEvent.ACTION_UP)
@@ -41,18 +41,18 @@ public class ButtonView extends ImageView {
     }
 
     @Override
-    public void setEnabled(boolean enabled){
-        super.setEnabled(enabled);
-        this.enabled = enabled;
+    public void setClickable(boolean clickable){
+        super.setClickable(clickable);
+        this.clickable = clickable;
 
-        if (enabled)
+        if (clickable)
             setAlpha(1f);
         else
             setAlpha(TRANSPARENCY);
     }
 
     private void init() {
-        enabled = false;
+        clickable = false;
         setAlpha(TRANSPARENCY);
     }
 }

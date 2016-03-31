@@ -25,8 +25,8 @@ public class FrameModule {
 
     private boolean running;
 
-    private DatagramPacket framePacket;
-    private DatagramSocket frameConnection;
+    private DatagramPacket packet;
+    private DatagramSocket socket;
     private InputStream in;
     private OutputStream out;
 
@@ -47,11 +47,11 @@ public class FrameModule {
         try {
             Log.d(TAG, "initializing frame");
 
-            frameConnection = new DatagramSocket(0, localIp);
-            framePacket = new DatagramPacket(new byte[SIZE_DATA + SIZE_FRAME_HEADER], SIZE_DATA + SIZE_FRAME_HEADER);
+            socket = new DatagramSocket(0, localIp);
+            packet = new DatagramPacket(new byte[SIZE_DATA + SIZE_FRAME_HEADER], SIZE_DATA + SIZE_FRAME_HEADER);
 
-            Log.d(TAG, "sending frame port: " + frameConnection.getLocalPort());
-            ByteUtil.writeInt(out, frameConnection.getLocalPort());
+            Log.d(TAG, "sending frame port: " + socket.getLocalPort());
+            ByteUtil.writeInt(out, socket.getLocalPort());
 
             int inputPort = ByteUtil.readInt(in);
             Log.d(TAG, "input port: " + inputPort);
@@ -61,19 +61,12 @@ public class FrameModule {
 
             Log.d(TAG, "done sending");
 
-            frameConnection.receive(framePacket);
-            int width = ByteUtil.readInt(framePacket.getData());
-            int height = ByteUtil.readInt(framePacket.getData(), 4);
-            frameView.setDimensions(width, height, SIZE_PIXEL);
-
-
+            socket.receive(packet);
+            int width = ByteUtil.readInt(packet.getData());
+            int height = ByteUtil.readInt(packet.getData(), 4);
             Log.d(TAG, "dimensions: " + width + ", " + height);
 
-            int bufferSize = frameConnection.getReceiveBufferSize();
-            Log.d(TAG, "receive buffer: " + bufferSize);
-
-            ByteUtil.writeInt(framePacket.getData(), bufferSize);
-            frameConnection.send(framePacket);
+            frameView.setDimensions(width, height, SIZE_PIXEL);
 
             return in.read() == ModuleManager.ACK;
         } catch (IOException e) {
@@ -94,7 +87,7 @@ public class FrameModule {
         Log.d(TAG, "starting frame");
 
         frameView.start();
-        frameTask = new FrameTask(frameConnection, framePacket, frameView);
+        frameTask = new FrameTask(socket, packet, frameView);
         new Thread(frameTask).start();
 
         try {
@@ -123,11 +116,11 @@ public class FrameModule {
         private byte[] data;
 
         private DatagramPacket packet;
-        private DatagramSocket connection;
+        private DatagramSocket socket;
         private FrameView frameView;
 
-        public FrameTask(DatagramSocket connection, DatagramPacket packet, FrameView frameView) {
-            this.connection = connection;
+        public FrameTask(DatagramSocket socket, DatagramPacket packet, FrameView frameView) {
+            this.socket = socket;
             this.packet = packet;
             this.frameView = frameView;
 
@@ -149,7 +142,7 @@ public class FrameModule {
             while (running) {
                 try {
                     packet.setLength(SIZE_DATA + SIZE_FRAME_HEADER);
-                    connection.receive(packet);
+                    socket.receive(packet);
 
                     int index = ByteUtil.readInt(data, 1, 3);
                     System.arraycopy(data, SIZE_FRAME_HEADER, buffer, index, packet.getLength() - SIZE_FRAME_HEADER);
