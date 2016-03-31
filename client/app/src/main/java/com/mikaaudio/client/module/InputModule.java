@@ -5,7 +5,6 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 
 import com.mikaaudio.client.util.ByteUtil;
 
