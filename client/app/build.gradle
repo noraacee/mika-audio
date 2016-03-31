@@ -6,14 +6,10 @@ android {
 
     defaultConfig {
         applicationId "com.mikaaudio.client"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
-
-        ndk {
-            moduleName "Client"
-        }
     }
 
     buildTypes {
@@ -22,24 +18,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
-    sourceSets.main {
-        jni.srcDirs = []
-        jniLibs.srcDirs 'src/main/libs'
-    }
-}
-
-task ndkbuild(type: Exec) {
-    def ndkDir = android.ndkDirectory
-    if (System.properties['os.name'].toLowerCase().contains('windows')) {
-        commandLine "$ndkDir\\ndk-build.cmd", '-C', file('src/main/jni').absolutePath
-    } else {
-        commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
-    }
-}
-
-tasks.withType(JavaCompile) {
-    compileTask -> compileTask.dependsOn ndkbuild
 }
 
 dependencies {

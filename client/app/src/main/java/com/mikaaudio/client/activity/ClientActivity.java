@@ -1,15 +1,13 @@
 package com.mikaaudio.client.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
+import android.widget.Toast;
 import com.mikaaudio.client.R;
 import com.mikaaudio.client.interf.OnDispatchKeyEventListener;
 import com.mikaaudio.client.interf.UICallbackListener;
@@ -19,38 +17,42 @@ import com.mikaaudio.client.manager.StatusManager;
 import com.mikaaudio.client.module.InputModule;
 import com.mikaaudio.client.widget.FrameView;
 import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
+import com.mikaaudio.client.widget.ButtonView;
 
 
 public class ClientActivity extends Activity implements UICallbackListener {
     private boolean connected;
     private boolean sendViewShown;
 
-    private Button apps;
-    private Button back;
-    private Button click;
-    private Button down;
-    private Button frame;
-    private Button home;
-    private Button input;
-    private Button keyboard;
-    private Button left;
-    private Button right;
-    private Button send;
-    private Button string;
+    private ButtonView frame;
+    private ButtonView input;
     private Button toggle;
-    private Button up;
-    private EditText sendView;
+    private ButtonView apps;
+    private ButtonView home;
+    private ButtonView back;
+    private ButtonView click;
+    private ButtonView up;
+    private ButtonView down;
+    private ButtonView left;
+    private ButtonView right;
+    private ButtonView keyboard;
     private FrameView display;
     private InterceptKeyEventLinearLayout contentView;
 
     private ModuleManager moduleManager;
-    private InputMethodManager inputMethodManager;
     private P2PManager p2pManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
+
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         connected = false;
         sendViewShown = false;
@@ -70,7 +72,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        click = (Button) findViewById(R.id.click);
+        click = (ButtonView) findViewById(R.id.click);
         click.setOnClickListener(new View.OnClickListener() {
             @Override
         public void onClick(View v) {
@@ -78,7 +80,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        back = (Button) findViewById(R.id.back);
+        back = (ButtonView) findViewById(R.id.back);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
         public void onClick(View v) {
@@ -86,7 +88,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        home = (Button) findViewById(R.id.home);
+        home = (ButtonView) findViewById(R.id.home);
         home.setOnClickListener(new View.OnClickListener() {
             @Override
         public void onClick(View v) {
@@ -94,7 +96,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        apps = (Button) findViewById(R.id.apps);
+        apps = (ButtonView) findViewById(R.id.apps);
         apps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,7 +104,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        up = (Button) findViewById(R.id.up);
+        up = (ButtonView) findViewById(R.id.up);
         up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -110,7 +112,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        down = (Button) findViewById(R.id.down);
+        down = (ButtonView) findViewById(R.id.down);
         down.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,7 +120,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        left = (Button) findViewById(R.id.left);
+        left = (ButtonView) findViewById(R.id.left);
         left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,7 +128,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        right = (Button) findViewById(R.id.right);
+        right = (ButtonView) findViewById(R.id.right);
         right.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -134,51 +136,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        keyboard = (Button) findViewById(R.id.keyboard);
-        keyboard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (sendViewShown) {
-                    sendView.setVisibility(View.GONE);
-                    send.setVisibility(View.GONE);
-                    sendViewShown = false;
-                    sendView.clearFocus();
-                }
-
-                contentView.requestFocus();
-
-                inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-            }
-        });
-
-        string = (Button) findViewById(R.id.string);
-        string.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (sendViewShown) {
-                    sendView.setVisibility(View.GONE);
-                    send.setVisibility(View.GONE);
-                    sendViewShown = false;
-                    sendView.clearFocus();
-                } else {
-                    sendView.setVisibility(View.VISIBLE);
-                    send.setVisibility(View.VISIBLE);
-                    sendViewShown = true;
-                    sendView.requestFocus();
-                }
-            }
-        });
-
-        sendView = (EditText) findViewById(R.id.message_to_send);
-
-        send = (Button) findViewById(R.id.send);
-        send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(sendView.getText().toString());
-                sendView.setText("");
-            }
-        });
+        keyboard = (ButtonView) findViewById(R.id.keyboard);
 
         toggle = (Button) findViewById(R.id.toggle);
         toggle.setOnClickListener(new View.OnClickListener() {
@@ -189,7 +147,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        input = (Button) findViewById(R.id.input);
+        input = (ButtonView) findViewById(R.id.input);
         input.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -197,7 +155,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
             }
         });
 
-        frame = (Button) findViewById(R.id.frame);
+        frame = (ButtonView) findViewById(R.id.frame);
         frame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -206,8 +164,6 @@ public class ClientActivity extends Activity implements UICallbackListener {
         });
 
         display = (FrameView) findViewById(R.id.display);
-
-        inputMethodManager = (InputMethodManager) ClientActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
 
         moduleManager = new ModuleManager(this, display);
 
@@ -239,9 +195,6 @@ public class ClientActivity extends Activity implements UICallbackListener {
         left.setEnabled(enabled);
         right.setEnabled(enabled);
         keyboard.setEnabled(enabled);
-        string.setEnabled(enabled);
-        sendView.setEnabled(enabled);
-        send.setEnabled(enabled);
     }
 
     @Override
@@ -249,6 +202,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
         input.setEnabled(true);
         frame.setEnabled(true);
 
+        Toast.makeText(getApplicationContext(), "Connected to Network", Toast.LENGTH_SHORT).show();
         connected = true;
     }
 
@@ -259,6 +213,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
 
         setEnabled(false);
 
+        Toast.makeText(getApplicationContext(), "Disconnected from Network", Toast.LENGTH_SHORT).show();
         connected = false;
     }
 

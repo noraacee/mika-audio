@@ -5,7 +5,6 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 
 import com.mikaaudio.client.util.ByteUtil;
 
@@ -126,25 +125,18 @@ public class InputModule {
                     try {
                         switch (msg.what) {
                             case MODE_EXIT:
-                                Log.d(TAG, "exitting input module");
+                                Log.d(TAG, "exiting input module");
                                 out.write(MODE_EXIT);
                                 break;
                             case MODE_KEY:
-                                Log.d(TAG, "sending key: " + msg.arg1);
                                 out.write(MODE_KEY);
                                 out.write(msg.arg1);
                                 break;
                             case MODE_TEXT:
-                                Log.d(TAG, "sending text: " + msg.obj);
                                 out.write(MODE_TEXT);
                                 out.write(((String) msg.obj).getBytes(CHARSET_UTF_8));
                                 break;
                             case MODE_EVENT:
-                                Log.d(TAG, "sending event: " + ByteUtil.readInt(data, POSITION_ACTION) + ", "
-                                        + ByteUtil.readFloat(data, POSITION_X) + ", "
-                                        + ByteUtil.readFloat(data, POSITION_Y) + ", "
-                                        + ByteUtil.readFloat(data, POSITION_META_STATE));
-
                                 socket.send(packet);
                                 break;
                         }

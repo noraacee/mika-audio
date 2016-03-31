@@ -34,7 +34,7 @@ public class ModuleManager {
     public ModuleManager(Context context) {
         this.context = context;
 
-        frameModule = new FrameModule();
+        frameModule = new FrameModule(context);
         irModule = new IrModule(new InputModule(context));
         connections = new ArrayList<>();
     }
@@ -108,8 +108,7 @@ public class ModuleManager {
                             Log.d(TAG, "module frame");
                             frameModule.start(in, out, inputModule,
                                     connection.getConnection().getLocalAddress(),
-                                    connection.getConnection().getInetAddress(),
-                                    context);
+                                    connection.getConnection().getInetAddress());
                             break;
                     }
                 }

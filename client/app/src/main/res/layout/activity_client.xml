@@ -5,8 +5,11 @@
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:orientation="vertical"
+    android:background="@color/windowBackground"
     android:layout_width="match_parent"
+    android:gravity="center_horizontal"
     android:layout_height="match_parent">
+
     <TextView
         android:id="@+id/status"
         android:layout_width="match_parent"
@@ -17,96 +20,135 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"/>
-    <Button
-        android:id="@+id/input"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="Input Module"/>
-    <Button
-        android:id="@+id/frame"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="Frame Module" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleX="1.25"
+            android:scaleY="1.25"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="20dp"
+            android:gravity="center_horizontal">
+
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/input"
+                android:src="@drawable/ic_settings_remote_white_48dp"
+                android:layout_marginRight="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="Input Module"/>
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/frame"
+                android:src="@drawable/ic_airplay_white_48dp"
+                android:layout_marginLeft="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="Frame Module" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
         android:enabled="false"
         android:text="Start/Stop"/>
-    <Button
-        android:id="@+id/click"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="click" />
-    <Button
-        android:id="@+id/back"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="back" />
-    <Button
-        android:id="@+id/home"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="home" />
-    <Button
-        android:id="@+id/apps"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="app" />
-    <Button
-        android:id="@+id/up"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="up" />
-    <Button
-        android:id="@+id/down"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="down" />
-    <Button
-        android:id="@+id/left"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="left" />
-    <Button
-        android:id="@+id/right"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="right" />
-    <Button
-        android:id="@+id/keyboard"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="keyboard"/>
-    <Button
-        android:id="@+id/string"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="string"/>
-    <EditText
-        android:id="@+id/message_to_send"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:inputType="text"
-        android:visibility="gone"/>
-    <Button
-        android:id="@+id/send"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="send"
-        android:visibility="gone"/>
+
+    <com.mikaaudio.client.widget.ButtonView
+            android:id="@+id/up"
+            android:src="@drawable/ic_keyboard_arrow_up_white_48dp"
+            android:scaleX="1.25"
+            android:scaleY="1.25"
+            android:layout_marginBottom="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="up" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleX="1.25"
+            android:scaleY="1.25"
+            android:layout_marginBottom="50dp"
+            android:gravity="center_horizontal">
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/left"
+                android:src="@drawable/ic_keyboard_arrow_left_white_48dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="left" />
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/click"
+                android:src="@mipmap/ic_launcher"
+                android:layout_marginLeft="40dp"
+                android:layout_marginRight="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="click" />
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/right"
+                android:src="@drawable/ic_keyboard_arrow_right_white_48dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="right" />
+    </LinearLayout>
+
+    <com.mikaaudio.client.widget.ButtonView
+            android:id="@+id/down"
+            android:src="@drawable/ic_keyboard_arrow_down_white_48dp"
+            android:scaleX="1.25"
+            android:scaleY="1.25"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="down" />
+
+    <com.mikaaudio.client.widget.ButtonView
+            android:id="@+id/keyboard"
+            android:src="@drawable/ic_keyboard_white_48dp"
+            android:scaleX="1.25"
+            android:scaleY="1.25"
+            android:layout_marginLeft="100dp"
+            android:layout_marginBottom="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="keyboard"/>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleX="1.25"
+            android:scaleY="1.25"
+            android:gravity="center_horizontal">
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/back"
+                android:src="@drawable/ic_undo_white_48dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="back" />
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/home"
+                android:src="@drawable/ic_home_white_48dp"
+                android:layout_marginLeft="45dp"
+                android:layout_marginRight="45dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="home" />
+        <com.mikaaudio.client.widget.ButtonView
+                android:id="@+id/apps"
+                android:src="@drawable/ic_apps_white_48dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="app" />
+    </LinearLayout>
 </com.mikaaudio.client.widget.InterceptKeyEventLinearLayout>
