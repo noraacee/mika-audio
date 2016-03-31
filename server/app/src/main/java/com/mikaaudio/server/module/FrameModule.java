@@ -39,10 +39,15 @@ public class FrameModule {
         System.loadLibrary(LIB_FRAME);
     }
 
+    private Context context;
     private DatagramPacket packet;
     private DatagramSocket socket;
     private FrameTask frameTask;
     private InputModule inputModule;
+
+    public FrameModule(Context context) {
+        this.context = context;
+    }
 
     public void stop() {
         if (connected) {
@@ -59,13 +64,13 @@ public class FrameModule {
         stop();
     }
 
-    public void start(InputStream in, OutputStream out, InputModule inputModule, InetAddress localIp, InetAddress targetIp, Context context) {
+    public void start(InputStream in, OutputStream out, InputModule inputModule, InetAddress localIp, InetAddress targetIp) {
         this.inputModule = inputModule;
         try {
             if (!connected) {
                 out.write(ModuleManager.ACK);
 
-                if (init(in, out, localIp, targetIp, context)) {
+                if (init(in, out, localIp, targetIp)) {
                     Log.d(TAG, "initiailized");
                     out.write(ModuleManager.ACK);
                     start(in);
@@ -81,7 +86,7 @@ public class FrameModule {
         }
     }
 
-    private boolean init(InputStream in, OutputStream out, InetAddress localIp, InetAddress targetIp, Context context) throws IOException {
+    private boolean init(InputStream in, OutputStream out, InetAddress localIp, InetAddress targetIp) throws IOException {
         Log.d(TAG, "initializing");
 
         int framePort = ByteUtil.readInt(in);
@@ -122,9 +127,7 @@ public class FrameModule {
 
     private static native long destroy(long screenPtr);
     private static native long init(String ip, int port, int width, int height);
-    private static native void start(long screenPtr);
     private static native void stop(long screenPtr);
-    private static native byte[] update(long screenPtr);
     private static native int updateFrame(long screenPtr, Bitmap frame);
 
     private static class FrameTask implements Runnable {
@@ -154,7 +157,6 @@ public class FrameModule {
 
         @Override
         public void run() {
-            //start(screenPtr);
             while (true) {
                 if (updateFrame(screenPtr, frame) == 0) {
                     frame.compress(Bitmap.CompressFormat.JPEG, QUALITY_COMPRESSION, bStream);

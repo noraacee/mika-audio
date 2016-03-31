@@ -153,15 +153,12 @@ public class InputModule {
                 public boolean handleMessage(Message msg) {
                     switch (msg.what) {
                         case MODE_KEY:
-                            Log.d(TAG, "received key: " + msg.arg1);
                             inputDispatcher.sendKeyDownUpSync(msg.arg1);
                             break;
                         case MODE_TEXT:
-                            Log.d(TAG, "received key: " + msg.obj);
                             inputDispatcher.sendStringSync((String) msg.obj);
                             break;
                         case MODE_EVENT:
-                            Log.d(TAG, "received event: " + msg.obj);
                             inputDispatcher.sendPointerSync((MotionEvent) msg.obj);
                     }
                     return true;
