@@ -31,7 +31,11 @@ android {
 
 task ndkbuild(type: Exec) {
     def ndkDir = android.ndkDirectory
-    commandLine "$ndkDir\\ndk-build.cmd", '-C', file('src/main/jni').absolutePath
+    if (System.properties['os.name'].toLowerCase().contains('windows')) {
+        commandLine "$ndkDir\\ndk-build.cmd", '-C', file('src/main/jni').absolutePath
+    } else {
+        commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
+    }
 }
 
 tasks.withType(JavaCompile) {
