@@ -1,7 +1,10 @@
 package com.mikaaudio.server.module;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.WindowManager;
 
 import com.mikaaudio.server.manager.ModuleManager;
 import com.mikaaudio.server.util.ByteUtil;
@@ -15,9 +18,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class FrameModule {
-    private static final int HEIGHT = 1280;
-    private static final int WIDTH = 720;
-
     private static final int QUALITY_COMPRESSION = 50;
 
     private static final int SIZE_FRAME_PACKET = 1500;
@@ -59,13 +59,13 @@ public class FrameModule {
         stop();
     }
 
-    public void start(InputStream in, OutputStream out, InputModule inputModule, InetAddress localIp, InetAddress targetIp) {
+    public void start(InputStream in, OutputStream out, InputModule inputModule, InetAddress localIp, InetAddress targetIp, Context context) {
         this.inputModule = inputModule;
         try {
             if (!connected) {
                 out.write(ModuleManager.ACK);
 
-                if (init(in, out, localIp, targetIp)) {
+                if (init(in, out, localIp, targetIp, context)) {
                     Log.d(TAG, "initiailized");
                     out.write(ModuleManager.ACK);
                     start(in);
@@ -81,7 +81,7 @@ public class FrameModule {
         }
     }
 
-    private boolean init(InputStream in, OutputStream out, InetAddress localIp, InetAddress targetIp) throws IOException {
+    private boolean init(InputStream in, OutputStream out, InetAddress localIp, InetAddress targetIp, Context context) throws IOException {
         Log.d(TAG, "initializing");
 
         int framePort = ByteUtil.readInt(in);
@@ -93,9 +93,14 @@ public class FrameModule {
         Log.d(TAG, "sending input port: " + socket.getLocalPort());
         ByteUtil.writeInt(out, socket.getLocalPort());
 
-        instance = init(targetIp.getHostAddress(), framePort, WIDTH, HEIGHT);
+        DisplayMetrics metrics = new DisplayMetrics();
+        ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
 
-        frameTask = new FrameTask(instance, targetIp, framePort);
+        instance = init(targetIp.getHostAddress(), framePort, screenWidth, screenHeight);
+
+        frameTask = new FrameTask(instance, targetIp, framePort, screenWidth, screenHeight);
 
         return instance != -1;
     }
@@ -136,14 +141,14 @@ public class FrameModule {
         private DatagramPacket packet;
         private DatagramSocket socket;
 
-        public FrameTask(long screenPtr, InetAddress ip, int port) throws IOException {
+        public FrameTask(long screenPtr, InetAddress ip, int port, int screenWidth, int screenHeight) throws IOException {
             this.screenPtr = screenPtr;
             socket = new DatagramSocket();
 
             data = new byte[SIZE_FRAME_HEADER + SIZE_DATA];
             packet = new DatagramPacket(data, SIZE_FRAME_HEADER + SIZE_DATA, ip, port);
 
-            frame = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.RGB_565);
+            frame = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.RGB_565);
             bStream = new ByteArrayOutputStream();
         }
 
