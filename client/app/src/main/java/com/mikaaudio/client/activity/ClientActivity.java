@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import android.widget.Toast;
 import com.mikaaudio.client.R;
 import com.mikaaudio.client.interf.OnDispatchKeyEventListener;
 import com.mikaaudio.client.interf.UICallbackListener;
@@ -201,6 +202,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
         input.setEnabled(true);
         frame.setEnabled(true);
 
+        Toast.makeText(getApplicationContext(), "Connected to Network", Toast.LENGTH_SHORT).show();
         connected = true;
     }
 
@@ -211,6 +213,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
 
         setEnabled(false);
 
+        Toast.makeText(getApplicationContext(), "Disconnected from Network", Toast.LENGTH_SHORT).show();
         connected = false;
     }
 
