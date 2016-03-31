@@ -76,7 +76,7 @@ public class IrModule {
 
         @Override
         public void run() {
-            final int MIN_DELAY = 500000; // in micro seconds
+            final int MIN_DELAY = 100000; // in micro seconds
             int x, value;
             int prev_time_s = 0, prev_time_us = 0;
             short type, code;

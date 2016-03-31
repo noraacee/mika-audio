@@ -81,7 +81,7 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         holder.setFormat(PixelFormat.RGB_565);
         holder.addCallback(this);
 
-        frameThread = new FrameThread(holder, (int) screenWidth * (int) screenHeight * pixelSize, scale);
+        frameThread = new FrameThread(holder, width * height * pixelSize);
         frameThread.start();
     }
 
@@ -107,7 +107,7 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         setMeasuredDimension((int) screenWidth, (int) screenHeight);
 
         if (frameThread != null) {
-            frameThread.setDimensions((int) screenWidth, (int) screenHeight);
+            frameThread.setDimensions((int) screenWidth, (int) screenHeight, pixelSize);
             frameThread.setScale(scale);
         }
     }
@@ -151,7 +151,7 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         private BitmapFactory.Options frameOptions;
         private final SurfaceHolder holder;
 
-        public FrameThread(SurfaceHolder holder, int size, double scale) {
+        public FrameThread(SurfaceHolder holder, int size) {
             this.holder = holder;
 
             buffer = new byte[size];
@@ -159,8 +159,6 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
             frameOptions = new BitmapFactory.Options();
             frameOptions.inDither = true;
             frameOptions.inScaled = true;
-            frameOptions.inTempStorage = new byte[size];
-            //setScale(scale);
 
             running = true;
             pixels = null;
@@ -205,11 +203,10 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        public void setDimensions(int screenWidth, int screenHeight) {
-            pixels = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.RGB_565);
+        public void setDimensions(int screenWidth, int screenHeight, int pixelSize) {
+            pixels = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
             frameOptions.inBitmap = pixels;
-            frameOptions.outHeight = screenHeight;
-            frameOptions.outWidth = screenWidth;
+            frameOptions.inTempStorage = new byte[screenWidth * screenHeight * pixelSize * 2];
         }
 
         public void setScale(double scale) {
@@ -224,9 +221,7 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         private void draw(Canvas canvas) {
-            long instant = System.currentTimeMillis();
             pixels = BitmapFactory.decodeByteArray(buffer, 0, length, frameOptions);
-            Log.d("time", Long.toString(System.currentTimeMillis() - instant));
 
             if (pixels != null)
                 canvas.drawBitmap(pixels, 0, 0, null);

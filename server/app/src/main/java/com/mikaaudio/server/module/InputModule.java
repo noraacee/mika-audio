@@ -9,6 +9,7 @@ import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.WindowManager;
 
 import com.mikaaudio.server.manager.ModuleManager;
 import com.mikaaudio.server.util.ByteUtil;
@@ -43,7 +44,8 @@ public class InputModule {
     }
 
     public InputModule(Context context) {
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        DisplayMetrics metrics = new DisplayMetrics();
+        ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
         screenWidth = metrics.widthPixels;
         screenHeight = metrics.heightPixels;
     }
