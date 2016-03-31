@@ -223,13 +223,13 @@ public class FrameModule {
 
                     float x;
                     float y;
-                    if (screenHeight > screenWidth) {
+                    //if (screenHeight > screenWidth) {
                         x = ByteUtil.readFloat(data, POSITION_X) * screenWidth;
                         y = ByteUtil.readFloat(data, POSITION_Y) * screenHeight;
-                    } else {
+                    /*} else {
                         x = ByteUtil.readFloat(data, POSITION_X) * screenHeight;
                         y = ByteUtil.readFloat(data, POSITION_Y) * screenWidth;
-                    }
+                    }*/
 
                     int metaState = ByteUtil.readInt(data, POSITION_META_STATE);
 

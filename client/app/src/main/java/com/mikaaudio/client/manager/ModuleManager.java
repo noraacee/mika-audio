@@ -1,5 +1,6 @@
 package com.mikaaudio.client.manager;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -100,7 +101,7 @@ public class ModuleManager {
 
         moduleThread = new ModuleThread(in, out);
         inputModule = new InputModule(out);
-        frameModule = new FrameModule(in, out, frameView, inputModule);
+        frameModule = new FrameModule((Activity) context, in, out, frameView, inputModule);
 
         uiHandler.obtainMessage(HANDLER_CONNECTED).sendToTarget();
 

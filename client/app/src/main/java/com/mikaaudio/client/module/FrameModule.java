@@ -1,5 +1,8 @@
 package com.mikaaudio.client.module;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.util.Log;
 
 import com.mikaaudio.client.manager.ModuleManager;
@@ -25,6 +28,8 @@ public class FrameModule {
 
     private boolean running;
 
+    Activity context;
+
     private DatagramPacket packet;
     private DatagramSocket socket;
     private InputStream in;
@@ -34,7 +39,8 @@ public class FrameModule {
     private FrameView frameView;
     private InputModule inputModule;
 
-    public FrameModule(InputStream in, OutputStream out, FrameView frameView, InputModule inputModule) {
+    public FrameModule(Activity context, InputStream in, OutputStream out, FrameView frameView, InputModule inputModule) {
+        this.context = context;
         this.in = in;
         this.out = out;
         this.frameView = frameView;
@@ -70,6 +76,9 @@ public class FrameModule {
             int width = ByteUtil.readInt(packet.getData());
             int height = ByteUtil.readInt(packet.getData(), 4);
             Log.d(TAG, "dimensions: " + width + ", " + height);
+
+            if (width > height)
+                context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
             frameView.setDimensions(width, height, SIZE_PIXEL);
 
