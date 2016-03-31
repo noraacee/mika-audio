@@ -24,7 +24,6 @@
 #include <utils/RefBase.h>
 #include <utils/threads.h>
 
-#include <ui/FrameStats.h>
 #include <ui/PixelFormat.h>
 #include <ui/Region.h>
 
@@ -53,10 +52,10 @@ public:
 
     static bool isSameSurface(
             const sp<SurfaceControl>& lhs, const sp<SurfaceControl>& rhs);
-
+        
     // release surface data from java
     void        clear();
-
+    
     status_t    setLayerStack(int32_t layerStack);
     status_t    setLayer(int32_t layer);
     status_t    setPosition(float x, float y);
@@ -73,9 +72,6 @@ public:
             const sp<SurfaceControl>& control, Parcel* parcel);
 
     sp<Surface> getSurface() const;
-
-    status_t clearLayerFrameStats() const;
-    status_t getLayerFrameStats(FrameStats* outStats) const;
 
 private:
     // can't be copied
@@ -94,7 +90,7 @@ private:
 
     status_t validate() const;
     void destroy();
-
+    
     sp<SurfaceComposerClient>   mClient;
     sp<IBinder>                 mHandle;
     sp<IGraphicBufferProducer>  mGraphicBufferProducer;

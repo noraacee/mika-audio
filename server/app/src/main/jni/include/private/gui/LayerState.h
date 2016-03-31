@@ -30,15 +30,11 @@ namespace android {
 class Parcel;
 class ISurfaceComposerClient;
 
-/*
- * Used to communicate layer information between SurfaceFlinger and its clients.
- */
 struct layer_state_t {
 
 
     enum {
-        eLayerHidden        = 0x01,     // SURFACE_HIDDEN in SurfaceControl.java
-        eLayerOpaque        = 0x02,     // SURFACE_OPAQUE
+        eLayerHidden        = 0x01,
     };
 
     enum {
@@ -51,7 +47,6 @@ struct layer_state_t {
         eVisibilityChanged          = 0x00000040,
         eLayerStackChanged          = 0x00000080,
         eCropChanged                = 0x00000100,
-        eOpacityChanged             = 0x00000200,
     };
 
     layer_state_t()
@@ -113,8 +108,7 @@ struct DisplayState {
     enum {
         eSurfaceChanged             = 0x01,
         eLayerStackChanged          = 0x02,
-        eDisplayProjectionChanged   = 0x04,
-        eDisplaySizeChanged         = 0x08
+        eDisplayProjectionChanged   = 0x04
     };
 
     uint32_t what;
@@ -124,7 +118,6 @@ struct DisplayState {
     uint32_t orientation;
     Rect viewport;
     Rect frame;
-    uint32_t width, height;
     status_t write(Parcel& output) const;
     status_t read(const Parcel& input);
 };

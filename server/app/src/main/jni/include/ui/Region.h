@@ -50,9 +50,6 @@ public:
     inline  Rect        getBounds() const   { return mStorage[mStorage.size() - 1]; }
     inline  Rect        bounds() const      { return getBounds(); }
 
-            bool        contains(const Point& point) const;
-            bool        contains(int x, int y) const;
-
             // the region becomes its bounds
             Region&     makeBoundsSelf();
     

@@ -19,7 +19,6 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#include <utils/Timers.h>
 
 #include <ui/PixelFormat.h>
 
@@ -34,8 +33,7 @@ struct DisplayInfo {
     float density;
     uint8_t orientation;
     bool secure;
-    nsecs_t appVsyncOffset;
-    nsecs_t presentationDeadline;
+    uint8_t reserved[2];
 };
 
 /* Display orientations as defined in Surface.java and ISurfaceComposer.h. */

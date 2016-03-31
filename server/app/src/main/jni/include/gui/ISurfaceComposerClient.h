@@ -25,7 +25,6 @@
 
 #include <binder/IInterface.h>
 
-#include <ui/FrameStats.h>
 #include <ui/PixelFormat.h>
 
 namespace android {
@@ -47,7 +46,6 @@ public:
         eOpaque             = 0x00000400,
         eProtectedByApp     = 0x00000800,
         eProtectedByDRM     = 0x00001000,
-        eCursorWindow       = 0x00002000,
 
         eFXSurfaceNormal    = 0x00000000,
         eFXSurfaceDim       = 0x00020000,
@@ -67,16 +65,6 @@ public:
      * Requires ACCESS_SURFACE_FLINGER permission
      */
     virtual status_t destroySurface(const sp<IBinder>& handle) = 0;
-
-    /*
-     * Requires ACCESS_SURFACE_FLINGER permission
-     */
-    virtual status_t clearLayerFrameStats(const sp<IBinder>& handle) const = 0;
-
-    /*
-     * Requires ACCESS_SURFACE_FLINGER permission
-     */
-    virtual status_t getLayerFrameStats(const sp<IBinder>& handle, FrameStats* outStats) const = 0;
 };
 
 // ----------------------------------------------------------------------------
