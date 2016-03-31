@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,16 +27,13 @@ public class ModuleManager {
 
     private static final String TAG = "MODULE";
 
-    private Context context;
     private FrameModule frameModule;
     private IrModule irModule;
     private List<Connection> connections;
 
     public ModuleManager(Context context) {
-        this.context = context;
-
         frameModule = new FrameModule(context);
-        irModule = new IrModule(new InputModule(context));
+        irModule = new IrModule(new InputModule());
         connections = new ArrayList<>();
     }
 
@@ -83,41 +81,62 @@ public class ModuleManager {
 
         @Override
         public void run() {
+            InputStream in = null;
+            OutputStream out = null;
             try {
-                InputStream in = connection.getConnection().getInputStream();
-                OutputStream out = connection.getConnection().getOutputStream();
+                in = connection.getConnection().getInputStream();
+                out = connection.getConnection().getOutputStream();
 
-                inputModule = new InputModule(context);
+                inputModule = new InputModule();
 
                 running = true;
                 int module;
                 Log.d(TAG, "listening");
                 communication: while(running) {
-                    module = in.read();
-                    switch(module) {
-                        case MODULE_EXIT:
-                            Log.d(TAG, "module exit");
-                            out.write(ACK);
-                            break communication;
-                        case MODULE_INPUT:
-                            Log.d(TAG, "module input");
-                            inputModule.listen(in, out);
-                            Log.d(TAG, "input stopped");
-                            break;
-                        case MODULE_FRAME:
-                            Log.d(TAG, "module frame");
-                            frameModule.start(in, out, inputModule,
-                                    connection.getConnection().getLocalAddress(),
-                                    connection.getConnection().getInetAddress());
-                            break;
+                    try {
+                        module = in.read();
+                        switch(module) {
+                            case MODULE_EXIT:
+                                Log.d(TAG, "module exit");
+                                out.write(ACK);
+                                break communication;
+                            case MODULE_INPUT:
+                                Log.d(TAG, "module input");
+                                inputModule.listen(in, out);
+                                Log.d(TAG, "input stopped");
+                                break;
+                            case MODULE_FRAME:
+                                Log.d(TAG, "module frame");
+                                frameModule.start(in, out, inputModule,
+                                        connection.getConnection().getLocalAddress(),
+                                        connection.getConnection().getInetAddress());
+                                break;
+                        }
+                    } catch (SocketTimeoutException e) {
+                        Log.d(TAG, "timeout");
+                        out.write(0);
+                    }
+                }
+            } catch (IOException e) {
+                Log.d(TAG, "disconnected");
+                e.printStackTrace();
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
 
-                in.close();
-                out.flush();
-                out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                if (out != null) {
+                    try {
+                        out.flush();
+                        out.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             Log.d(TAG, "socket at port " + connection.getConnection().getLocalPort() + " is disconnected");

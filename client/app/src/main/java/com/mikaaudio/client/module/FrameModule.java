@@ -44,6 +44,11 @@ public class FrameModule {
     }
 
     public boolean init(InetAddress localIp, InetAddress targetIp) {
+        if (running)
+            return false;
+        else
+            running = true;
+
         try {
             Log.d(TAG, "initializing frame");
 
@@ -71,19 +76,12 @@ public class FrameModule {
             return in.read() == ModuleManager.ACK;
         } catch (IOException e) {
             e.printStackTrace();
+            running = false;
             return false;
         }
     }
 
-    public void onDestroy() {
-        if (running)
-            stop();
-    }
-
     public void start() {
-        if (running)
-            return;
-
         Log.d(TAG, "starting frame");
 
         frameView.start();
@@ -92,13 +90,15 @@ public class FrameModule {
 
         try {
             out.write(ModuleManager.ACK);
-            running = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void stop() {
+        if (!running)
+            return;
+
         try {
             out.write(ModuleManager.ACK);
             frameView.stop();
