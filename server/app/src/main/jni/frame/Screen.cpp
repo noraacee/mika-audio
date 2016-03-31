@@ -32,7 +32,7 @@ namespace android {
     }
 
     unsigned char* Screen::update() {
-        status_t err = client->update(display, *sourceCrop, width, height, false);
+        status_t err = client->update(display);
         if (err != NO_ERROR)
             return convertedBitmap;
 
@@ -59,7 +59,7 @@ namespace android {
     }
 
     int Screen::updateFrame(char *bitmapPtr) {
-        status_t err = client->update(display, *sourceCrop, width, height, false);
+        status_t err = client->update(display);
         if (err != NO_ERROR)
             return err;
 
@@ -137,7 +137,7 @@ namespace android {
     }
 
     void Screen::sendFrame() {
-        status_t err = client->update(display, *sourceCrop, width, height, false);
+        status_t err = client->update(display);
         if (err != NO_ERROR)
             return;
 
