@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 public class FrameModule {
     private static final int POSITION_ACTION = 0;
@@ -53,9 +54,7 @@ public class FrameModule {
     private int screenWidth;
 
     private Context context;
-    private DatagramPacket framePacket;
     private DatagramPacket inputPacket;
-    private DatagramSocket frameSocket;
     private DatagramSocket inputSocket;
     private FrameTask frameTask;
     private InputModule inputModule;
@@ -79,7 +78,7 @@ public class FrameModule {
         stop();
     }
 
-    public void start(InputStream in, OutputStream out, InputModule inputModule, InetAddress localIp, InetAddress targetIp) {
+    public void start(InputStream in, OutputStream out, InputModule inputModule, InetAddress localIp, InetAddress targetIp) throws IOException {
         this.inputModule = inputModule;
         try {
             if (!connected) {
@@ -89,7 +88,7 @@ public class FrameModule {
                 if (init(in, out, localIp, targetIp)) {
                     Log.d(TAG, "initiailized");
                     out.write(ModuleManager.ACK);
-                    start(in);
+                    start(in, out);
                 } else {
                     Log.d(TAG, "failed to initialize");
                     out.write(ModuleManager.REJECT);
@@ -99,18 +98,35 @@ public class FrameModule {
                 out.write(ModuleManager.REJECT);
             }
         } catch (IOException e) {
+            if (frameTask != null)
+                frameTask.stop();
+
+            if (inputTask != null)
+                inputTask.stop();
+
+            Log.d(TAG, "disconnected");
             e.printStackTrace();
+            throw e;
         }
     }
 
     private boolean init(InputStream in, OutputStream out, InetAddress localIp, InetAddress targetIp) throws IOException {
         Log.d(TAG, "initializing");
 
-        int framePort = ByteUtil.readInt(in);
-        Log.d(TAG, "frame port: " + framePort);
+        int framePort;
+        while (true) {
+            try {
+                framePort = ByteUtil.readInt(in);
+                Log.d(TAG, "frame port: " + framePort);
+                break;
+            } catch (SocketTimeoutException e) {
+                Log.d(TAG, "timeout");
+                out.write(0);
+            }
+        }
 
-        frameSocket = new DatagramSocket(0, localIp);
-        framePacket = new DatagramPacket(new byte[SIZE_FRAME_HEADER + SIZE_DATA], SIZE_FRAME_HEADER + SIZE_DATA, targetIp, framePort);
+        DatagramSocket frameSocket = new DatagramSocket(0, localIp);
+        DatagramPacket framePacket = new DatagramPacket(new byte[SIZE_FRAME_HEADER + SIZE_DATA], SIZE_FRAME_HEADER + SIZE_DATA, targetIp, framePort);
 
         inputSocket = new DatagramSocket(0, localIp);
         inputPacket = new DatagramPacket(new byte[SIZE_INPUT_PACKET], SIZE_INPUT_PACKET);
@@ -135,18 +151,33 @@ public class FrameModule {
         return instance != -1;
     }
 
-    private void parse() throws IOException {
+    private void parse(InputStream in, OutputStream out) throws IOException {
         inputTask = new InputTask(inputSocket, inputPacket, inputModule, screenWidth, screenHeight);
         new Thread(inputTask).start();
+        while (true) {
+            try {
+                if (in.read() == ModuleManager.ACK) {
+                    frameTask.stop();
+                    inputTask.stop();
+                    break;
+                }
+            } catch (SocketTimeoutException e) {
+                out.write(0);
+            }
+        }
     }
 
-    private void start(InputStream in) throws IOException {
-        if (in.read() == ModuleManager.ACK) {
-            new Thread(frameTask).start();
-            Log.d(TAG, "started");
-            parse();
-        } else {
-            start(in);
+    private void start(InputStream in, OutputStream out) throws IOException {
+        try {
+            if (in.read() == ModuleManager.ACK) {
+                new Thread(frameTask).start();
+                Log.d(TAG, "started");
+                parse(in, out);
+            } else {
+                start(in, out);
+            }
+        } catch (SocketTimeoutException e) {
+            out.write(0);
         }
     }
 
@@ -172,6 +203,10 @@ public class FrameModule {
             this.screenHeight = screenHeight;
         }
 
+        public void stop() {
+            running = false;
+        }
+
         @Override
         public void run() {
             running = true;
@@ -186,8 +221,15 @@ public class FrameModule {
                     if (action == MotionEvent.ACTION_DOWN)
                         downTime = SystemClock.uptimeMillis();
 
-                    float x = ByteUtil.readFloat(data, POSITION_X) * screenWidth;
-                    float y = ByteUtil.readFloat(data, POSITION_Y) * screenHeight;
+                    float x;
+                    float y;
+                    if (screenHeight > screenWidth) {
+                        x = ByteUtil.readFloat(data, POSITION_X) * screenWidth;
+                        y = ByteUtil.readFloat(data, POSITION_Y) * screenHeight;
+                    } else {
+                        x = ByteUtil.readFloat(data, POSITION_X) * screenHeight;
+                        y = ByteUtil.readFloat(data, POSITION_Y) * screenWidth;
+                    }
 
                     int metaState = ByteUtil.readInt(data, POSITION_META_STATE);
 
@@ -200,6 +242,8 @@ public class FrameModule {
     }
 
     private static class FrameTask implements Runnable {
+        private volatile boolean running;
+
         private byte[] data;
 
         private int count;
@@ -223,11 +267,16 @@ public class FrameModule {
             bStream = new ByteArrayOutputStream();
         }
 
+        public void stop() {
+            running = false;
+        }
+
         @Override
         public void run() {
+            running = true;
             int length;
             int diff = 0;
-            while (true) {
+            while (running) {
                 long instant = System.currentTimeMillis();
                 if (updateFrame(screenPtr, frame) == 0) {
                     frame.compress(Bitmap.CompressFormat.JPEG, QUALITY_COMPRESSION, bStream);

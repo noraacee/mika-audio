@@ -64,8 +64,12 @@ public class ClientActivity extends Activity implements UICallbackListener {
             @Override
             public boolean onDispatchKeyEvent(KeyEvent keyEvent) {
                 if (!sendViewShown && keyEvent.getAction() == KeyEvent.ACTION_UP) {
-                    moduleManager.getInputModule().sendInput(keyEvent.getKeyCode());
-                    return true;
+                    try {
+                        moduleManager.getInputModule().sendInput(keyEvent.getKeyCode());
+                        return true;
+                    } catch (IllegalStateException ignored) {
+                        return false;
+                    }
                 }
 
                 return false;
@@ -76,7 +80,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         click.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_CLICK);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_CLICK);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -84,7 +90,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         back.setOnClickListener(new View.OnClickListener() {
             @Override
         public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_BACK);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_BACK);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -92,7 +100,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         home.setOnClickListener(new View.OnClickListener() {
             @Override
         public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_HOME);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_HOME);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -100,7 +110,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         apps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_APPS);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_APPS);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -108,7 +120,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_UP);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_UP);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -116,7 +130,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         down.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_DOWN);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_DOWN);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -124,7 +140,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_LEFT);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_LEFT);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -132,7 +150,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
         right.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                moduleManager.getInputModule().sendInput(InputModule.KEY_RIGHT);
+                try {
+                    moduleManager.getInputModule().sendInput(InputModule.KEY_RIGHT);
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -143,7 +163,9 @@ public class ClientActivity extends Activity implements UICallbackListener {
             @Override
             public void onClick(View v) {
                 display.setVisibility(View.VISIBLE);
-                moduleManager.getFrameModule().start();
+                try {
+                    moduleManager.getFrameModule().start();
+                } catch (IllegalStateException ignored) {}
             }
         });
 
@@ -169,7 +191,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
 
         display = (FrameView) findViewById(R.id.display);
 
-        moduleManager = new ModuleManager(this, display);
+        moduleManager = new ModuleManager(this, this, display);
 
         p2pManager = new P2PManager(this, moduleManager);
         p2pManager.connect();

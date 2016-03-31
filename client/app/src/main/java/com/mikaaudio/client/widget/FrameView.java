@@ -87,12 +87,15 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void stop() {
-        frameThread.setRunning(false);
-        while (true) {
-            try {
-                frameThread.join();
-                break;
-            } catch (InterruptedException ignored) {}
+        if (frameThread != null) {
+            frameThread.setRunning(false);
+            while (true) {
+                try {
+                    frameThread.join();
+                    break;
+                } catch (InterruptedException ignored) {
+                }
+            }
         }
     }
 

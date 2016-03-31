@@ -1,15 +1,11 @@
 package com.mikaaudio.server.module;
 
 import android.app.Instrumentation;
-import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.WindowManager;
 
 import com.mikaaudio.server.manager.ModuleManager;
 import com.mikaaudio.server.util.ByteUtil;
@@ -18,8 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.net.SocketTimeoutException;
 
 public class InputModule {
     private static final int MODE_EXIT = 0x00;
@@ -27,22 +22,12 @@ public class InputModule {
     private static final int MODE_TEXT = 0x02;
     private static final int MODE_EVENT = 0x03;
 
-    private float screenHeight;
-    private float screenWidth;
-
     private static final String TAG = "INPUT";
 
     private static final InputThread inputThread;
 
     static {
         inputThread = new InputThread();
-    }
-
-    public InputModule(Context context) {
-        DisplayMetrics metrics = new DisplayMetrics();
-        ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
-        screenWidth = metrics.widthPixels;
-        screenHeight = metrics.heightPixels;
     }
 
     public void inputKeyEvent(int key) {
@@ -63,7 +48,7 @@ public class InputModule {
         }
     }
 
-    public void listen(InputStream in, OutputStream out) {
+    public void listen(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[ByteUtil.LENGTH_BUFFER];
         ByteArrayOutputStream inString = new ByteArrayOutputStream();
 
@@ -73,23 +58,45 @@ public class InputModule {
 
             int mode;
             listening: while (true) {
-                mode = in.read();
-                switch(mode) {
-                    case MODE_EXIT:
-                        Log.d(TAG, "exiting");
-                        break listening;
-                    case MODE_KEY:
-                        inputKeyEvent(in.read());
-                        break;
-                    case MODE_TEXT:
-                        inputString(ByteUtil.readString(in, inString, buffer));
-                        break;
+                try {
+                    mode = in.read();
+                    switch (mode) {
+                        case MODE_EXIT:
+                            Log.d(TAG, "exiting");
+                            break listening;
+                        case MODE_KEY:
+                            while (true) {
+                                try {
+                                    inputKeyEvent(in.read());
+                                    break;
+                                } catch (SocketTimeoutException e) {
+                                    Log.d(TAG, "timeout");
+                                    out.write(0);
+                                }
+                            }
+                            break;
+                        case MODE_TEXT:
+                            while (true) {
+                                 try {
+                                     inputString(ByteUtil.readString(in, inString, buffer));
+                                     break;
+                                 } catch (SocketTimeoutException e) {
+                                     Log.d(TAG, "timeout");
+                                     out.write(0);
+                                 }
+                            }
+                    }
+                } catch (SocketTimeoutException e) {
+                    Log.d(TAG, "timeout");
+                    out.write(0);
                 }
             }
 
             out.write(ModuleManager.ACK);
         } catch (IOException e) {
+            Log.d(TAG, "disconnected");
             e.printStackTrace();
+            throw e;
         }
     }
 

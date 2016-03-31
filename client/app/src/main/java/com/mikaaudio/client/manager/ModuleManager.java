@@ -1,10 +1,12 @@
 package com.mikaaudio.client.manager;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.mikaaudio.client.interf.UICallbackListener;
 import com.mikaaudio.client.module.FrameModule;
@@ -19,6 +21,7 @@ import java.net.Socket;
 
 public class ModuleManager {
     public static final int ACK = 0xFF;
+    public static final int REJECT = 0xFE;
 
     public static final int MODULE_EXIT = 0x00;
     public static final int MODULE_INPUT = 0x01;
@@ -41,14 +44,16 @@ public class ModuleManager {
 
     private UICallbackListener uiCallbackListener;
 
+    private Context context;
     private FrameView frameView;
     private Handler uiHandler;
     private ModuleThread moduleThread;
     private Socket socket;
 
-    public ModuleManager(UICallbackListener uiCallbackListener, FrameView frameView) {
+    public ModuleManager(Context context, UICallbackListener uiCallbackListener, FrameView frameView) {
         if (uiCallbackListener == null)
             throw new NullPointerException();
+        this.context = context;
         this.uiCallbackListener = uiCallbackListener;
         this.frameView = frameView;
 
@@ -73,16 +78,9 @@ public class ModuleManager {
 
     public void onDestroy() {
         if (connected) {
-            frameModule.onDestroy();
-            inputModule.onDestroy();
-
-            try {
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (currModule == MODULE_FRAME) {
+                frameModule.stop();
             }
-
-            connected = false;
         }
     }
 
@@ -182,13 +180,17 @@ public class ModuleManager {
                                 Log.d("status", "switching to input");
                                 switch (currModule) {
                                     case MODULE_FRAME:
-                                        frameModule.stop();
-                                        if (in.read() != ACK)
-                                            break;
+                                        while (true) {
+                                            frameModule.stop();
+                                            if (in.read() == ACK)
+                                                break;
+                                        }
                                     case MODULE_EXIT:
-                                        out.write(MODULE_INPUT);
-                                        if (in.read() != ACK)
-                                            break;
+                                        while (true) {
+                                            out.write(MODULE_INPUT);
+                                            if (in.read() == ACK)
+                                                break;
+                                        }
                                         currModule = MODULE_INPUT;
                                         uiHandler.obtainMessage(HANDLER_MODULE, MODULE_INPUT, 0).sendToTarget();
                                 }
@@ -197,16 +199,25 @@ public class ModuleManager {
                                 Log.d("status", "switching to frame");
                                 switch (currModule) {
                                     case MODULE_INPUT:
-                                        inputModule.exit();
-                                        if (in.read() != ACK)
-                                            break;
+                                        while (true) {
+                                            inputModule.exit();
+                                            if (in.read() == ACK)
+                                                break;
+                                        }
                                     case MODULE_EXIT:
-                                        Log.d("status", "connecting to frame");
                                         out.write(MODULE_FRAME);
-                                        if (in.read() != ACK)
-                                            break;
-                                        if (frameModule.init(socket.getLocalAddress(), socket.getInetAddress()))
-                                            uiHandler.obtainMessage(HANDLER_MODULE, MODULE_FRAME, 0).sendToTarget();
+                                        while (true) {
+                                            Log.d("status", "connecting to frame");
+                                            int response = in.read();
+                                            if (response == ACK) {
+                                                if (frameModule.init(socket.getLocalAddress(), socket.getInetAddress()))
+                                                    uiHandler.obtainMessage(HANDLER_MODULE, MODULE_FRAME, 0).sendToTarget();
+                                                break;
+                                            } else if (response == REJECT) {
+                                                Toast.makeText(context, "Screen forwarding only allowed on 1 device", Toast.LENGTH_LONG).show();
+                                                break;
+                                            }
+                                        }
                                 }
                                 break;
                         }
