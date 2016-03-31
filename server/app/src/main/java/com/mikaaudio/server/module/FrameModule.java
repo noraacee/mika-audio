@@ -82,7 +82,7 @@ public class FrameModule {
         this.inputModule = inputModule;
         try {
             if (!connected) {
-                connected = true;
+                //connected = true;
                 out.write(ModuleManager.ACK);
 
                 if (init(in, out, localIp, targetIp)) {
