@@ -79,7 +79,6 @@ public class FrameModule {
 
             if (width > height)
                 context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
             frameView.setDimensions(width, height, SIZE_PIXEL);
 
             return in.read() == ModuleManager.ACK;

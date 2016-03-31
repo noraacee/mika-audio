@@ -1,6 +1,7 @@
 package com.mikaaudio.client.activity;
 
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -181,6 +182,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
         frame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                 moduleManager.switchModule(ModuleManager.MODULE_FRAME);
             }
         });
