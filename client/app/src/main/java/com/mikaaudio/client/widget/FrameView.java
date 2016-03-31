@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -15,7 +16,9 @@ import com.mikaaudio.client.module.InputModule;
 public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
     private static final int TIMEOUT = 50;
 
-    private double scale;
+    private float scale;
+    private float screenHeight;
+    private float screenWidth;
 
     private int height;
     private int pixelSize;
@@ -41,12 +44,18 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (inputModule != null) {
-            inputModule.sendInput(ev);
-            return true;
-        }
+        if (inputModule == null)
+            return false;
 
-        return false;
+        int action = ev.getAction();
+        int metaState = ev.getMetaState();
+
+        float x = ev.getX() / screenWidth;
+        float y = ev.getY() / screenHeight;
+
+        inputModule.sendInput(action, x, y, metaState);
+
+        return true;
     }
 
     public byte[] getBuffer() {
@@ -72,7 +81,7 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         holder.setFormat(PixelFormat.RGB_565);
         holder.addCallback(this);
 
-        frameThread = new FrameThread(holder, width * height * pixelSize, scale);
+        frameThread = new FrameThread(holder, (int) screenWidth * (int) screenHeight * pixelSize, scale);
         frameThread.start();
     }
 
@@ -90,15 +99,17 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        int w = getMeasuredWidth();
-        scale = ((double) w) /  ((double) width);
+        screenWidth = getMeasuredWidth();
+        scale = screenWidth / ((float) width);
 
-        int h = (w / 9) * 16;
+        screenHeight = (screenWidth / 9) * 16;
 
-        setMeasuredDimension(w, h);
+        setMeasuredDimension((int) screenWidth, (int) screenHeight);
 
-        if (frameThread != null)
+        if (frameThread != null) {
+            frameThread.setDimensions((int) screenWidth, (int) screenHeight);
             frameThread.setScale(scale);
+        }
     }
 
     @Override
@@ -146,9 +157,10 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
             buffer = new byte[size];
 
             frameOptions = new BitmapFactory.Options();
-            frameOptions.inScaled = true;
             frameOptions.inDither = true;
-            setScale(scale);
+            frameOptions.inScaled = true;
+            frameOptions.inTempStorage = new byte[size];
+            //setScale(scale);
 
             running = true;
             pixels = null;
@@ -193,6 +205,13 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
+        public void setDimensions(int screenWidth, int screenHeight) {
+            pixels = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.RGB_565);
+            frameOptions.inBitmap = pixels;
+            frameOptions.outHeight = screenHeight;
+            frameOptions.outWidth = screenWidth;
+        }
+
         public void setScale(double scale) {
             frameOptions.inDensity = 10;
             frameOptions.inTargetDensity = (int) (10.0 * scale);
@@ -205,7 +224,9 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         private void draw(Canvas canvas) {
+            long instant = System.currentTimeMillis();
             pixels = BitmapFactory.decodeByteArray(buffer, 0, length, frameOptions);
+            Log.d("time", Long.toString(System.currentTimeMillis() - instant));
 
             if (pixels != null)
                 canvas.drawBitmap(pixels, 0, 0, null);

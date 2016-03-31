@@ -2,12 +2,12 @@
 #include <android/bitmap.h>
 #include <jni.h>
 
-extern "C" void Java_com_mikaaudio_server_module_FrameModule_destroy(JNIEnv *env, jobject object, jlong ptr) {
+extern "C" void Java_com_mikaaudio_server_module_FrameModule_destroy(JNIEnv* env, jobject object, jlong ptr) {
     android::Screen* screen = (android::Screen*) ptr;
     delete screen;
 }
 
-extern "C" jlong Java_com_mikaaudio_server_module_FrameModule_init (JNIEnv *env, jobject object, jstring jip, uint32_t port, uint32_t w, uint32_t h) {
+extern "C" jlong Java_com_mikaaudio_server_module_FrameModule_init (JNIEnv* env, jobject object, jstring jip, uint32_t port, uint32_t w, uint32_t h) {
     char* ip;
     const char * _ip = env->GetStringUTFChars(jip, 0);
     ip = strdup(_ip);
@@ -27,9 +27,17 @@ extern "C" void Java_com_mikaaudio_server_module_FrameModule_start(JNIEnv* env, 
     screen->start();
 }
 
-extern "C" void Java_com_mikaaudio_server_module_FrameModule_stop(JNIEnv*, jobject object, jlong ptr) {
+extern "C" void Java_com_mikaaudio_server_module_FrameModule_stop(JNIEnv* env, jobject object, jlong ptr) {
     android::Screen* screen = (android::Screen*) ptr;
     screen->stop();
+}
+
+extern "C" jbyteArray Java_com_mikaaudio_server_module_FrameModule_update(JNIEnv* env, jobject object, jlong ptr) {
+    android::Screen* screen = (android::Screen*) ptr;
+    jbyteArray bitmap = env->NewByteArray(screen->getSize());
+    env->SetByteArrayRegion(bitmap, 0, screen->getSize(), (jbyte*) screen->update());
+
+    return bitmap;
 }
 
 extern "C" jint Java_com_mikaaudio_server_module_FrameModule_updateFrame(JNIEnv* env, jobject object, jlong ptr, jobject bitmap) {

@@ -6,16 +6,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 
 public class ByteUtil {
     public static final int LENGTH_BUFFER = 1024;
 
-    public static String readString(InputStream in, ByteArrayOutputStream inString, byte[] buffer) throws IOException {
-        int length;
-        while((length = in.read(buffer)) != -1)
-            inString.write(buffer, 0, length);
-        return inString.toString(AppManager.getCharset());
+    public static int readByte(byte[] data, int offset) {
+        return (data[offset] & 0xFF);
     }
 
     public static float readFloat(byte[] data, int offset) {
@@ -23,8 +19,25 @@ public class ByteUtil {
         return Float.intBitsToFloat(intBits);
     }
 
+    public static int readInt(byte[] data) {
+        return readInt(data, 0);
+    }
+
     public static int readInt(byte[] data, int offset) {
         return data[offset] << 24 | (data[offset + 1] & 0xFF) << 16 | (data[offset + 2] & 0xFF) << 8 | (data[offset + 3] & 0xFF);
+    }
+
+    public static int readInt(byte[] data, int offset, int n) {
+        switch (n) {
+            case 1:
+                return (data[offset + 3] & 0xFF);
+            case 2:
+                return (data[offset + 2] & 0xFF) << 8 | (data[offset + 3] & 0xFF);
+            case 3:
+                return (data[offset + 1] & 0xFF) << 16 | (data[offset + 2] & 0xFF) << 8 | (data[offset + 3] & 0xFF);
+            default:
+                return data[offset] << 24 | (data[offset + 1] & 0xFF) << 16 | (data[offset + 2] & 0xFF) << 8 | (data[offset + 3] & 0xFF);
+        }
     }
 
     public static int readInt(InputStream in) throws IOException {
@@ -52,6 +65,17 @@ public class ByteUtil {
         return value;
     }
 
+    public static String readString(InputStream in, ByteArrayOutputStream inString, byte[] buffer) throws IOException {
+        int length;
+        while((length = in.read(buffer)) != -1)
+            inString.write(buffer, 0, length);
+        return inString.toString(AppManager.getCharset());
+    }
+
+    public static void writeFloat(byte[] data, float value, int offset) {
+        writeInt(data, Float.floatToIntBits(value), offset);
+    }
+
     public static void writeInt(byte[] data, int value) {
         data[0] = (byte) (value >>> 24);
         data[1] = (byte) (value >>> 16);
@@ -59,10 +83,28 @@ public class ByteUtil {
         data[3] = (byte) (value);
     }
 
+    public static void writeInt(byte[] data, int value, int offset) {
+        data[offset] = (byte) (value >>> 24);
+        data[offset + 1] = (byte) (value >>> 16);
+        data[offset + 2] = (byte) (value >>> 8);
+        data[offset + 3] = (byte) (value);
+    }
+
     public static void writeInt(OutputStream out, int value) throws IOException {
         out.write(value >>> 24);
         out.write(value >>> 16);
         out.write(value >>> 8);
         out.write(value);
+    }
+
+    public static void writeLong(byte[] data, long value, int offset) {
+        data[offset] = (byte) (value >> 56);
+        data[offset + 1] = (byte) (value >> 48);
+        data[offset + 2] = (byte) (value >> 40);
+        data[offset + 3] = (byte) (value >> 32);
+        data[offset + 4] = (byte) (value >> 24);
+        data[offset + 5] = (byte) (value >> 16);
+        data[offset + 6] = (byte) (value >> 8);
+        data[offset + 7] = (byte) value;
     }
 }

@@ -19,7 +19,7 @@ public class P2PManager {
     private AcceptClientTask acceptClientTask;
 
     public P2PManager(Context context) {
-        moduleManager = new ModuleManager();
+        moduleManager = new ModuleManager(context);
 
 
         nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);

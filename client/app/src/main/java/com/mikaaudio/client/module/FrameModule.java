@@ -146,13 +146,12 @@ public class FrameModule {
             running = true;
             int done;
             int length;
-            long instant;
             while (running) {
                 try {
                     packet.setLength(SIZE_DATA + SIZE_FRAME_HEADER);
                     connection.receive(packet);
 
-                    int index = ByteUtil.read(data, 1);
+                    int index = ByteUtil.readInt(data, 1, 3);
                     System.arraycopy(data, SIZE_FRAME_HEADER, buffer, index, packet.getLength() - SIZE_FRAME_HEADER);
 
                     done = ByteUtil.readByte(data, 0);

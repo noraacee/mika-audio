@@ -1,9 +1,12 @@
 package com.mikaaudio.server.module;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.os.SystemClock;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -23,12 +26,13 @@ public class InputModule {
     private static final int MODE_TEXT = 0x02;
     private static final int MODE_EVENT = 0x03;
 
-    private static final int POSITION_DOWN_TIME = 0;
-    private static final int POSITION_EVENT_TIME = 8;
-    private static final int POSITION_ACTION = 16;
-    private static final int POSITION_X = 20;
-    private static final int POSITION_Y = 24;
-    private static final int POSITION_META_STATE = 28;
+    private static final int POSITION_ACTION = 0;
+    private static final int POSITION_X = 4;
+    private static final int POSITION_Y = 8;
+    private static final int POSITION_META_STATE = 12;
+
+    private float screenHeight;
+    private float screenWidth;
 
     private static final String TAG = "INPUT";
 
@@ -36,6 +40,12 @@ public class InputModule {
 
     static {
         inputThread = new InputThread();
+    }
+
+    public InputModule(Context context) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        screenWidth = metrics.widthPixels;
+        screenHeight = metrics.heightPixels;
     }
 
     public void inputKeyEvent(int key) {
@@ -89,13 +99,18 @@ public class InputModule {
     public void listen(DatagramSocket connection, DatagramPacket packet) {
         try {
             byte[] data = packet.getData();
+            long downTime = SystemClock.uptimeMillis();
             while (true) {
                 connection.receive(packet);
-                long downTime = ByteUtil.readLong(data, POSITION_DOWN_TIME);
-                long eventTime = ByteUtil.readLong(data, POSITION_EVENT_TIME);
+                long eventTime = SystemClock.uptimeMillis();
+
                 int action = ByteUtil.readInt(data, POSITION_ACTION);
-                float x = ByteUtil.readFloat(data, POSITION_X);
-                float y = ByteUtil.readFloat(data, POSITION_Y);
+                if (action == MotionEvent.ACTION_DOWN)
+                    downTime = SystemClock.uptimeMillis();
+
+                float x = ByteUtil.readFloat(data, POSITION_X) * screenWidth;
+                float y = ByteUtil.readFloat(data, POSITION_Y) * screenHeight;
+
                 int metaState = ByteUtil.readInt(data, POSITION_META_STATE);
 
                 inputMotionEvent(MotionEvent.obtain(downTime, eventTime, action, x, y, metaState));

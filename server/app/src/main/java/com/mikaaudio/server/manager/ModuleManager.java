@@ -1,5 +1,6 @@
 package com.mikaaudio.server.manager;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.mikaaudio.server.module.FrameModule;
@@ -25,13 +26,16 @@ public class ModuleManager {
 
     private static final String TAG = "MODULE";
 
+    private Context context;
     private FrameModule frameModule;
     private IrModule irModule;
     private List<Connection> connections;
 
-    public ModuleManager() {
+    public ModuleManager(Context context) {
+        this.context = context;
+
         frameModule = new FrameModule();
-        irModule = new IrModule(new InputModule());
+        irModule = new IrModule(new InputModule(context));
         connections = new ArrayList<>();
     }
 
@@ -83,7 +87,7 @@ public class ModuleManager {
                 InputStream in = connection.getConnection().getInputStream();
                 OutputStream out = connection.getConnection().getOutputStream();
 
-                inputModule = new InputModule();
+                inputModule = new InputModule(context);
 
                 running = true;
                 int module;

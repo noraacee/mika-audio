@@ -17,7 +17,6 @@
 
 const int SIZE_PIXEL = 4;
 const int SIZE_CONVERTED_PIXEL = 2;
-const int SIZE_PACKET_PIXEL = 2;
 
 const int SIZE_PACKET = 1500;
 const int SIZE_IP_HEADER = 20;
@@ -39,7 +38,12 @@ namespace android {
         int initCheck();
         void start();
         void stop();
+        unsigned char* update();
         int updateFrame(char* bitmapPtr);
+
+        int getSize() {
+            return pixels;
+        }
 
     private:
         int initSucceed;

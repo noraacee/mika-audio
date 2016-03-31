@@ -31,6 +31,33 @@ namespace android {
         running = false;
     }
 
+    unsigned char* Screen::update() {
+        status_t err = client->update(display, *sourceCrop, width, height, false);
+        if (err != NO_ERROR)
+            return convertedBitmap;
+
+        stride = (client->getStride()) - width * 4;
+        bitmap = (unsigned char*) client->getPixels();
+
+        count = 0;
+        for (index = 0; index < pixels; index += SIZE_CONVERTED_PIXEL) {
+            if (index % (width * SIZE_CONVERTED_PIXEL) == 0 && count != 0)
+                count += stride;
+
+            r = ((bitmap[count] >> 3) & 0x001f ) << 11;
+            g = ((bitmap[count + 1] >> 2) & 0x003f ) << 5;
+            b = (bitmap[count + 2] >> 3) & 0x001f;
+            rgb = (uint16_t) (r | g | b);
+
+            *(convertedBitmap + index * SIZE_CONVERTED_PIXEL) = rgb & 0xFF;
+            *(convertedBitmap + index * SIZE_CONVERTED_PIXEL + 1) = rgb >> 8;
+
+            count += SIZE_PIXEL;
+        }
+
+        return convertedBitmap;
+    }
+
     int Screen::updateFrame(char *bitmapPtr) {
         status_t err = client->update(display, *sourceCrop, width, height, false);
         if (err != NO_ERROR)
@@ -53,7 +80,7 @@ namespace android {
             *(bitmapPtr + 1) = rgb >> 8;
 
             count += SIZE_PIXEL;
-            bitmapPtr += SIZE_PACKET_PIXEL;
+            bitmapPtr += SIZE_CONVERTED_PIXEL;
         }
 
         return NO_ERROR;
@@ -69,7 +96,7 @@ namespace android {
 
         sourceCrop = new Rect();
 
-        convertedBitmap = NULL;
+        convertedBitmap = new unsigned char[pixels];
 
         writeInt(width, 0);
         writeInt(height, 4);

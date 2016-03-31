@@ -30,14 +30,12 @@ public class InputModule {
     private static final int MODE_TEXT = 0x02;
     private static final int MODE_EVENT = 0x03;
 
-    private static final int POSITION_DOWN_TIME = 0;
-    private static final int POSITION_EVENT_TIME = 8;
-    private static final int POSITION_ACTION = 16;
-    private static final int POSITION_X = 20;
-    private static final int POSITION_Y = 24;
-    private static final int POSITION_META_STATE = 28;
+    private static final int POSITION_ACTION = 0;
+    private static final int POSITION_X = 4;
+    private static final int POSITION_Y = 8;
+    private static final int POSITION_META_STATE = 12;
 
-    private static final int SIZE_PACKET = 32;
+    private static final int SIZE_PACKET = 16;
 
     private static final String CHARSET_UTF_8 = "UTF-8";
     private static final String TAG = "input";
@@ -68,9 +66,8 @@ public class InputModule {
         inputThread.sendInput(key);
     }
 
-    public void sendInput(MotionEvent ev) {
-        Log.d(TAG, "sending: " + ev.toString());
-        inputThread.sendInput(ev);
+    public void sendInput(int action, float x, float y, int metaState) {
+        inputThread.sendInput(action, x, y, metaState);
     }
 
     public void sendInput(String text) {
@@ -109,8 +106,13 @@ public class InputModule {
             inputHandler.obtainMessage(MODE_KEY, key, 0).sendToTarget();
         }
 
-        public void sendInput(MotionEvent ev) {
-            inputHandler.obtainMessage(MODE_EVENT, ev).sendToTarget();
+        public void sendInput(int action, float x, float y, int metaState) {
+            ByteUtil.writeInt(data, action, POSITION_ACTION);
+            ByteUtil.writeFloat(data, x, POSITION_X);
+            ByteUtil.writeFloat(data, y, POSITION_Y);
+            ByteUtil.writeInt(data, metaState, POSITION_META_STATE);
+
+            inputHandler.obtainMessage(MODE_EVENT).sendToTarget();
         }
 
         public void sendInput(String text) {
@@ -138,15 +140,10 @@ public class InputModule {
                                 out.write(((String) msg.obj).getBytes(CHARSET_UTF_8));
                                 break;
                             case MODE_EVENT:
-                                MotionEvent ev = (MotionEvent) msg.obj;
-                                Log.d(TAG, "sending event: " + ev);
-
-                                ByteUtil.writeLong(data, ev.getDownTime(), POSITION_DOWN_TIME);
-                                ByteUtil.writeLong(data, ev.getEventTime(), POSITION_EVENT_TIME);
-                                ByteUtil.writeInt(data, ev.getAction(), POSITION_ACTION);
-                                ByteUtil.writeFloat(data, ev.getX(), POSITION_X);
-                                ByteUtil.writeFloat(data, ev.getY(), POSITION_Y);
-                                ByteUtil.writeFloat(data, ev.getMetaState(), POSITION_META_STATE);
+                                Log.d(TAG, "sending event: " + ByteUtil.readInt(data, POSITION_ACTION) + ", "
+                                        + ByteUtil.readFloat(data, POSITION_X) + ", "
+                                        + ByteUtil.readFloat(data, POSITION_Y) + ", "
+                                        + ByteUtil.readFloat(data, POSITION_META_STATE));
 
                                 socket.send(packet);
                                 break;

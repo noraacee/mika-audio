@@ -21,7 +21,7 @@ public class FrameModule {
     private static final int QUALITY_COMPRESSION = 50;
 
     private static final int SIZE_FRAME_PACKET = 1500;
-    private static final int SIZE_INPUT_PACKET = 32;
+    private static final int SIZE_INPUT_PACKET = 16;
     private static final int SIZE_IP_HEADER = 20;
     private static final int SIZE_UDP_HEADER = 8;
     private static final int SIZE_FRAME_HEADER = 4;
@@ -119,6 +119,7 @@ public class FrameModule {
     private static native long init(String ip, int port, int width, int height);
     private static native void start(long screenPtr);
     private static native void stop(long screenPtr);
+    private static native byte[] update(long screenPtr);
     private static native int updateFrame(long screenPtr, Bitmap frame);
 
     private static class FrameTask implements Runnable {
