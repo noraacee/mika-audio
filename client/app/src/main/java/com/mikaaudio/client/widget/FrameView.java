@@ -51,8 +51,14 @@ public class FrameView extends SurfaceView implements SurfaceHolder.Callback {
         int action = ev.getAction();
         int metaState = ev.getMetaState();
 
-        float x = ev.getX() / screenWidth;
-        float y = ev.getY() / screenHeight;
+        float x, y;
+        if (screenWidth > screenHeight) {
+            x = ev.getX() / screenHeight;
+            y = ev.getY() / screenWidth;
+        } else {
+            x = ev.getX() / screenWidth;
+            y = ev.getY() / screenHeight;
+        }
 
         inputModule.sendInput(action, x, y, metaState);
 

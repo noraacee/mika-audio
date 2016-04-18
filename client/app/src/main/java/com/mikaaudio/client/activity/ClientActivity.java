@@ -182,7 +182,7 @@ public class ClientActivity extends Activity implements UICallbackListener {
         frame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                 moduleManager.switchModule(ModuleManager.MODULE_FRAME);
             }
         });
