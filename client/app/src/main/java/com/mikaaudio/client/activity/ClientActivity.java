@@ -3,7 +3,11 @@ package com.mikaaudio.client.activity;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -19,7 +23,6 @@ import com.mikaaudio.client.module.InputModule;
 import com.mikaaudio.client.widget.FrameView;
 import com.mikaaudio.client.widget.InterceptKeyEventLinearLayout;
 import com.mikaaudio.client.widget.ButtonView;
-
 
 public class ClientActivity extends Activity implements UICallbackListener {
     private boolean connected;
